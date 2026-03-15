@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { ENDPOINTS, ORDER_STATUSES, CURRENCY } from '../config';
-import { Search, Filter, Eye, Package, TrendingUp } from 'lucide-react';
+import { Search, Filter, Eye, Package, TrendingUp, X } from 'lucide-react';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -53,10 +53,18 @@ export default function OrdersPage() {
     }
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOrders = orders.filter(order => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      order.orderNumber.toLowerCase().includes(query) ||
+      order.customerName?.toLowerCase().includes(query) ||
+      order.customerPhone?.toLowerCase().includes(query) ||
+      order.customerEmail?.toLowerCase().includes(query) ||
+      order.merchantName?.toLowerCase().includes(query)
+    );
+  });
 
   const getStatusInfo = (status) => {
     const statusObj = ORDER_STATUSES.find(s => s.value === status);
@@ -147,11 +155,20 @@ export default function OrdersPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Rechercher par numéro de commande..."
+              placeholder="Rechercher par numéro, client, téléphone, email ou marchand..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input pl-10"
+              className="input pl-10 pr-10"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-gray-600"
+                title="Effacer la recherche"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           <div className="flex gap-2 flex-wrap">
             <button
@@ -183,6 +200,14 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <div className="card overflow-hidden p-0">
+        {!loading && filteredOrders.length > 0 && (
+          <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+            <p className="text-sm text-gray-600">
+              {filteredOrders.length} commande{filteredOrders.length > 1 ? 's' : ''} trouvée{filteredOrders.length > 1 ? 's' : ''}
+              {searchQuery && ` pour "${searchQuery}"`}
+            </p>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
@@ -199,6 +224,7 @@ export default function OrdersPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Commande</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marchand</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Articles</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
@@ -217,6 +243,9 @@ export default function OrdersPage() {
                       <td className="px-6 py-4">
                         <p className="text-sm text-gray-900">{order.customerName || 'N/A'}</p>
                         <p className="text-xs text-gray-500">{order.customerPhone || ''}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-gray-900">{order.merchantName || 'N/A'}</p>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {order.items?.length || 0} article(s)
@@ -283,6 +312,26 @@ export default function OrdersPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Client and Merchant Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-bold mb-3">Informations client</h3>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="font-medium">{selectedOrder.client?.name || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">{selectedOrder.client?.phone || ''}</p>
+                    <p className="text-sm text-gray-600">{selectedOrder.client?.email || ''}</p>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-bold mb-3">Informations marchand</h3>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="font-medium">{selectedOrder.merchant?.shopName || selectedOrder.merchant?.name || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">{selectedOrder.merchant?.phone || ''}</p>
+                    <p className="text-sm text-gray-600">{selectedOrder.merchant?.email || ''}</p>
+                  </div>
+                </div>
               </div>
 
               {/* Order Items */}

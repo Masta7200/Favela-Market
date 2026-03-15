@@ -38,7 +38,7 @@ export default function LandingPage() {
                 <ShoppingBag className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                Favela Market
+                Toumaï Market
               </span>
             </div>
             <a href="#login" className="btn btn-primary">
@@ -60,7 +60,7 @@ export default function LandingPage() {
               Marketplace en Toute Simplicité
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Tableau de bord administrateur complet pour Favela Market. 
+              Tableau de bord administrateur complet pour Toumaï Market. 
               Gérez les vendeurs, produits, commandes et bien plus encore.
             </p>
             <div className="flex flex-wrap gap-4">
@@ -221,7 +221,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
                   <ShoppingBag className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">Favela Market</span>
+                <span className="text-xl font-bold">Toumaï Market</span>
               </div>
               <p className="text-gray-400">
                 Votre marketplace de confiance pour tous vos achats au Tchad.
@@ -241,7 +241,7 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold mb-4">Contact</h3>
               <ul className="space-y-2 text-gray-400">
-                <li>Email: contact@favelamarket.cm</li>
+                <li>Email: contact@toumaimarket.cm</li>
                 <li>Tél: +235 99507200</li>
                 <li>N'Djamena, Tchad</li>
               </ul>
@@ -249,7 +249,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Favela Market. Tous droits réservés.</p>
+            <p>&copy; 2024 Toumaï Market. Tous droits réservés.</p>
           </div>
         </div>
       </footer>

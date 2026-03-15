@@ -434,7 +434,7 @@ export default function UsersPage() {
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     className="input"
-                    placeholder="+237600000000"
+                    placeholder="+235600000000"
                     required
                     disabled={modalMode === 'view'}
                   />
