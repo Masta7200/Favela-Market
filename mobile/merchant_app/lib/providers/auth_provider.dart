@@ -99,9 +99,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (response['success'] == true) {
         _merchant = MerchantModel.fromJson(response['data']['user']);
-        await StorageService.saveToken(response['data']['token']);
-        await StorageService.saveUser(response['data']['user']);
-
+        // Registration successful - user must login to authenticate
         _isLoading = false;
         notifyListeners();
         return true;

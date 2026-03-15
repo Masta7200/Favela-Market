@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
@@ -29,9 +29,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Format phone with Chad country code
+    final phone = '+235${_phoneController.text.trim()}';
+
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.login(
-      _phoneController.text,
+      phone,
       _passwordController.text,
     );
 
@@ -112,21 +115,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
 
                 // Phone Field
-                IntlPhoneField(
+                TextFormField(
                   controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(8),
+                  ],
                   decoration: const InputDecoration(
                     labelText: 'Numéro de téléphone',
+                    hintText: '66000000',
                     prefixIcon: Icon(Icons.phone),
+                    prefixText: '+235  ',
+                    prefixStyle: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
                   ),
-                  initialCountryCode: 'CM',
-                  validator: (phone) {
-                    if (phone == null || phone.completeNumber.isEmpty) {
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
                       return 'Veuillez entrer votre numéro';
                     }
+                    if (value.length < 8) {
+                      return 'Le numéro doit contenir au moins 8 chiffres';
+                    }
                     return null;
-                  },
-                  onChanged: (phone) {
-                    _phoneController.text = phone.completeNumber;
                   },
                 ),
                 const SizedBox(height: 16),

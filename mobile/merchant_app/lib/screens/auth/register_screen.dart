@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
@@ -24,7 +24,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _shopDescriptionController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String _fullPhone = '';
 
   @override
   void dispose() {
@@ -41,10 +40,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Format phone with Chad country code
+    final phone = '+235${_phoneController.text.trim()}';
+
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.register(
       name: _nameController.text.trim(),
-      phone: _fullPhone,
+      phone: phone,
       password: _passwordController.text.trim(),
       shopName: _shopNameController.text.trim(),
       email: _emailController.text.trim().isEmpty
@@ -61,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Compte créé avec succès! En attente d\'approbation par l\'administrateur.',
+            'Compte créé avec succès! Connectez-vous pour continuer.',
           ),
           backgroundColor: AppTheme.successColor,
           behavior: SnackBarBehavior.floating,
@@ -69,7 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           duration: const Duration(seconds: 4),
         ),
       );
-      context.go('/dashboard');
+      // Redirect to login screen after successful registration
+      context.go('/login');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -142,36 +145,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Phone Number Field
                 _buildLabel('Numéro de téléphone'),
-                IntlPhoneField(
+                TextFormField(
                   controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(8),
+                  ],
                   decoration: InputDecoration(
-                    hintText: '600000000',
+                    hintText: '66000000',
                     prefixIcon: const Icon(Icons.phone_rounded),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.borderColor),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.borderColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: AppTheme.primaryColor,
-                        width: 2,
-                      ),
+                    prefixText: '+235  ',
+                    prefixStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
                   ),
-                  initialCountryCode: 'TD',
-                  onChanged: (phone) {
-                    _fullPhone = phone.completeNumber;
-                  },
                   validator: (value) {
-                    if (value == null || value.number.isEmpty) {
+                    if (value == null || value.isEmpty) {
                       return 'Veuillez entrer votre numéro de téléphone';
+                    }
+                    if (value.length < 8) {
+                      return 'Le numéro doit contenir au moins 8 chiffres';
                     }
                     return null;
                   },

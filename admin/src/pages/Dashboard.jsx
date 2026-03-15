@@ -52,7 +52,7 @@ export default function Dashboard() {
                 <LayoutDashboard className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="font-bold text-lg">Favela Market</p>
+                <p className="font-bold text-lg">Toumaï Market</p>
                 <p className="text-xs text-gray-500">Admin Panel</p>
               </div>
             </div>

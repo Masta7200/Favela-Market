@@ -22,6 +22,8 @@ app.use('/api/admin', require('./routes/admin'));
 // Public routes
 app.use('/api/products', require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
+// Orders routes
+app.use('/api/orders', require('./routes/orders'));
 
 // Serve admin build in production
 if (process.env.NODE_ENV === 'production') {

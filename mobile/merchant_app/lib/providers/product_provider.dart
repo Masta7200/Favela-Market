@@ -68,12 +68,12 @@ class ProductProvider extends ChangeNotifier {
       notifyListeners();
 
       final response = await ApiService.post(
-        AppConfig.productsEndpoint,
+        AppConfig.createProductEndpoint,
         {
           'name': name,
           'description': description,
           'price': price,
-          'categoryId': categoryId,
+          'category': categoryId,
           'stock': stock,
           if (image != null) 'image': image,
         },
@@ -119,7 +119,7 @@ class ProductProvider extends ChangeNotifier {
           'name': name,
           'description': description,
           'price': price,
-          'categoryId': categoryId,
+          'category': categoryId,
           'stock': stock,
           if (image != null) 'image': image,
         },

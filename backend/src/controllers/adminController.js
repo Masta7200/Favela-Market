@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const Order = require('../models/Order');
 const { USER_ROLES, PRODUCT_STATUS } = require('../constants');
 
 // Get dashboard stats
@@ -11,8 +12,11 @@ exports.getStats = async (req, res) => {
     const totalCategories = await Category.countDocuments();
     const pendingProducts = await Product.countDocuments({ status: PRODUCT_STATUS.PENDING });
     const pendingMerchants = await User.countDocuments({ role: USER_ROLES.MERCHANT, isApproved: false });
-    const totalOrders = 0; // TODO: Add Order model count
-    const totalRevenue = 0; // TODO: Calculate from orders
+    const totalOrders = await Order.countDocuments();
+    const totalRevenue = await Order.aggregate([
+      { $match: { status: { $in: ['delivered', 'completed'] } } },
+      { $group: { _id: null, total: { $sum: '$total' } } }
+    ]).then(result => result[0]?.total || 0);
 
     res.json({
       success: true,
@@ -28,6 +32,93 @@ exports.getStats = async (req, res) => {
     });
   } catch (err) {
     console.error('getStats error', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+// Get all orders (admin)
+exports.getOrders = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const filter = {};
+    if (status && status !== 'all') filter.status = status;
+
+    const orders = await Order.find(filter)
+      .populate('client', 'name phone email')
+      .populate('merchant', 'name shopName phone')
+      .sort({ createdAt: -1 });
+
+    // Transform orders to include customer info
+    const transformedOrders = orders.map(order => ({
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      customerName: order.client?.name || 'N/A',
+      customerPhone: order.client?.phone || '',
+      customerEmail: order.client?.email || '',
+      merchantName: order.merchant?.shopName || order.merchant?.name || 'N/A',
+      items: order.items,
+      total: order.total,
+      status: order.status,
+      createdAt: order.createdAt,
+      deliveryAddress: order.deliveryAddress
+    }));
+
+    res.json({
+      success: true,
+      data: { orders: transformedOrders }
+    });
+  } catch (err) {
+    console.error('getOrders error', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+// Get order by ID (admin)
+exports.getOrderById = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId)
+      .populate('client', 'name phone email')
+      .populate('merchant', 'name shopName phone email')
+      .populate('items.product', 'name images price');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Commande introuvable' });
+    }
+
+    res.json({
+      success: true,
+      data: { order }
+    });
+  } catch (err) {
+    console.error('getOrderById error', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+// Update order status (admin)
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true }
+    ).populate('client', 'name phone').populate('merchant', 'name shopName');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Commande introuvable' });
+    }
+
+    res.json({
+      success: true,
+      data: { order },
+      message: 'Statut mis à jour avec succès'
+    });
+  } catch (err) {
+    console.error('updateOrderStatus error', err);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 };

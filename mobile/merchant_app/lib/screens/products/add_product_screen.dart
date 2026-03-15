@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../config/theme.dart';
 import '../../providers/product_provider.dart';
 import '../../models/product_model.dart';
@@ -25,10 +23,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
+  final _imageUrlController = TextEditingController();
 
   String? _selectedCategoryId;
-  File? _imageFile;
   String? _existingImageUrl;
+  String? _previewImageUrl;
   bool _isLoading = false;
   ProductModel? _existingProduct;
 
@@ -49,6 +48,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _stockController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -68,129 +68,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
         _stockController.text = _existingProduct!.stock.toString();
         _selectedCategoryId = _existingProduct!.categoryId;
         _existingImageUrl = _existingProduct!.image;
+        _imageUrlController.text = _existingProduct!.image ?? '';
       });
     }
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 80,
-      );
-
-      if (image != null) {
-        setState(() {
-          _imageFile = File(image.path);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors de la sélection de l\'image: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
-    }
-  }
-
-  void _showImagePicker() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Text(
-                'Choisir une image',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-                title: const Text('Prendre une photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.secondaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.photo_library,
-                    color: AppTheme.secondaryColor,
-                  ),
-                ),
-                title: const Text('Choisir depuis la galerie'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                },
-              ),
-              if (_imageFile != null || _existingImageUrl != null)
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.errorColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.delete,
-                      color: AppTheme.errorColor,
-                    ),
-                  ),
-                  title: const Text('Supprimer l\'image'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      _imageFile = null;
-                      _existingImageUrl = null;
-                    });
-                  },
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Future<void> _saveProduct() async {
@@ -211,6 +91,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
     final productProvider = context.read<ProductProvider>();
 
     bool success;
+    final imageUrl = _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim();
+    
     if (isEditing) {
       success = await productProvider.updateProduct(
         productId: widget.productId!,
@@ -219,7 +101,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         price: double.parse(_priceController.text.trim()),
         categoryId: _selectedCategoryId!,
         stock: int.parse(_stockController.text.trim()),
-        image: _existingImageUrl,
+        image: imageUrl,
       );
     } else {
       success = await productProvider.addProduct(
@@ -228,7 +110,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         price: double.parse(_priceController.text.trim()),
         categoryId: _selectedCategoryId!,
         stock: int.parse(_stockController.text.trim()),
-        image: null,
+        image: imageUrl,
       );
     }
 
@@ -280,41 +162,96 @@ class _AddProductScreenState extends State<AddProductScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image Picker
-              _buildLabel('Image du produit'),
-              GestureDetector(
-                onTap: _showImagePicker,
-                child: Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.borderColor),
-                  ),
-                  child: _imageFile != null
-                      ? ClipRRect(
+              // Image URL
+              _buildLabel('URL de l\'image du produit'),
+              TextFormField(
+                controller: _imageUrlController,
+                decoration: const InputDecoration(
+                  hintText: 'https://exemple.com/image.jpg',
+                  prefixIcon: Icon(Icons.link),
+                  helperText: 'Lien direct vers l\'image (optionnel)',
+                ),
+                onChanged: (value) {
+                  // Debounce image preview update
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (mounted && value == _imageUrlController.text) {
+                      setState(() {
+                        _previewImageUrl = value.trim().isEmpty ? null : value.trim();
+                      });
+                    }
+                  });
+                },
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    // Basic URL validation
+                    final urlPattern = r'^https?://[^\s/$.?#].[^\s]*$';
+                    final regExp = RegExp(urlPattern, caseSensitive: false);
+                    if (!regExp.hasMatch(value)) {
+                      return 'Veuillez entrer une URL valide';
+                    }
+                  }
+                  return null;
+                },
+              ),
+              if (_previewImageUrl != null || _existingImageUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 150,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            _imageFile!,
+                          border: Border.all(color: AppTheme.borderColor),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            _previewImageUrl ?? _existingImageUrl ?? '',
                             fit: BoxFit.cover,
                             width: double.infinity,
-                          ),
-                        )
-                      : _existingImageUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                _existingImageUrl!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                errorBuilder: (_, __, ___) =>
-                                    _buildImagePlaceholder(),
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey[100],
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Impossible de charger l\'image',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      '(Vérifiez l\'URL ou utilisez une image CORS-compatible)',
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 10,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            )
-                          : _buildImagePlaceholder(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               const SizedBox(height: 20),
 
               // Product Name
@@ -517,35 +454,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
           color: AppTheme.textPrimaryColor,
         ),
       ),
-    );
-  }
-
-  Widget _buildImagePlaceholder() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.add_photo_alternate,
-          size: 48,
-          color: Colors.grey[400],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Ajouter une image',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Appuyez pour sélectionner',
-          style: TextStyle(
-            color: Colors.grey[500],
-            fontSize: 12,
-          ),
-        ),
-      ],
     );
   }
 }
