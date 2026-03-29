@@ -24,12 +24,16 @@ class OrderProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _error = null;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
 
       final response = await ApiService.get(AppConfig.ordersEndpoint);
 
       if (response['success'] == true) {
-        final List<dynamic> data = response['data']['orders'] ?? [];
+        // Backend returns data as a list (not wrapped in { orders })
+        final List<dynamic> data = response['data'] is List
+            ? response['data']
+            : (response['data'] is Map ? response['data']['orders'] ?? [] : []);
+
         _orders = data.map((json) => OrderModel.fromJson(json)).toList();
 
         // Sort by date (newest first)
@@ -38,11 +42,11 @@ class OrderProvider extends ChangeNotifier {
       }
 
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
     } on ApiException catch (e) {
       _error = e.message;
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
     }
   }
 
@@ -50,25 +54,25 @@ class OrderProvider extends ChangeNotifier {
   Future<OrderModel?> getOrderById(String orderId) async {
     try {
       _isLoading = true;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
 
       final response = await ApiService.get(
-        '${AppConfig.ordersEndpoint}/$orderId',
+        AppConfig.orderEndpoint(orderId),
       );
 
       if (response['success'] == true) {
-        _currentOrder = OrderModel.fromJson(response['data']['order']);
+        _currentOrder = OrderModel.fromJson(response['data']);
         _isLoading = false;
-        notifyListeners();
+        Future.microtask(() => notifyListeners());
         return _currentOrder;
       }
 
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return null;
     } catch (e) {
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return null;
     }
   }
@@ -81,7 +85,7 @@ class OrderProvider extends ChangeNotifier {
       notifyListeners();
 
       final response = await ApiService.put(
-        '${AppConfig.ordersEndpoint}/$orderId/status',
+        AppConfig.orderStatusEndpoint(orderId),
         {'status': newStatus},
       );
 

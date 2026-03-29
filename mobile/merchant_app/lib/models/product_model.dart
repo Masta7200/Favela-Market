@@ -40,7 +40,9 @@ class ProductModel {
       categoryName: json['categoryName'] ?? json['category']?['name'] ?? '',
       merchantId: json['merchantId'] ?? json['merchant']?['_id'] ?? '',
       merchantName: json['merchantName'] ?? json['merchant']?['shopName'] ?? '',
-      stock: json['stock'] ?? 0,
+      stock: (json['stock'] is String)
+          ? int.tryParse(json['stock']) ?? 0
+          : (json['stock'] is int ? json['stock'] as int : 0),
       status: json['status'] ?? 'approved',
       isApproved: json['isApproved'] ?? true,
       createdAt:

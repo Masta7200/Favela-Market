@@ -20,7 +20,7 @@ class ProductProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _error = null;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
 
       final response = await ApiService.get(AppConfig.productsEndpoint);
 
@@ -30,11 +30,11 @@ class ProductProvider extends ChangeNotifier {
       }
 
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
     } on ApiException catch (e) {
       _error = e.message;
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
     }
   }
 
@@ -46,7 +46,7 @@ class ProductProvider extends ChangeNotifier {
       if (response['success'] == true) {
         final List<dynamic> data = response['data']['categories'] ?? [];
         _categories = data.map((json) => CategoryModel.fromJson(json)).toList();
-        notifyListeners();
+        Future.microtask(() => notifyListeners());
       }
     } catch (e) {
       // Silently fail for categories
@@ -65,7 +65,7 @@ class ProductProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _error = null;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
 
       final response = await ApiService.post(
         AppConfig.createProductEndpoint,
@@ -82,18 +82,18 @@ class ProductProvider extends ChangeNotifier {
       if (response['success'] == true) {
         await fetchProducts();
         _isLoading = false;
-        notifyListeners();
+        Future.microtask(() => notifyListeners());
         return true;
       }
 
       _error = response['message'] ?? 'Erreur lors de l\'ajout du produit';
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return false;
     } on ApiException catch (e) {
       _error = e.message;
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return false;
     }
   }
@@ -111,10 +111,10 @@ class ProductProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _error = null;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
 
       final response = await ApiService.put(
-        '${AppConfig.productsEndpoint}/$productId',
+        AppConfig.productEndpoint(productId),
         {
           'name': name,
           'description': description,
@@ -128,18 +128,18 @@ class ProductProvider extends ChangeNotifier {
       if (response['success'] == true) {
         await fetchProducts();
         _isLoading = false;
-        notifyListeners();
+        Future.microtask(() => notifyListeners());
         return true;
       }
 
       _error = response['message'] ?? 'Erreur lors de la mise à jour';
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return false;
     } on ApiException catch (e) {
       _error = e.message;
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return false;
     }
   }
@@ -149,27 +149,27 @@ class ProductProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _error = null;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
 
       final response = await ApiService.delete(
-        '${AppConfig.productsEndpoint}/$productId',
+        AppConfig.productEndpoint(productId),
       );
 
       if (response['success'] == true) {
         _products.removeWhere((p) => p.id == productId);
         _isLoading = false;
-        notifyListeners();
+        Future.microtask(() => notifyListeners());
         return true;
       }
 
       _error = response['message'] ?? 'Erreur lors de la suppression';
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return false;
     } on ApiException catch (e) {
       _error = e.message;
       _isLoading = false;
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return false;
     }
   }
@@ -185,6 +185,6 @@ class ProductProvider extends ChangeNotifier {
 
   void clearError() {
     _error = null;
-    notifyListeners();
+    Future.microtask(() => notifyListeners());
   }
 }

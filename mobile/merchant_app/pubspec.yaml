@@ -47,15 +47,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.3
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "lib/assets/icons/WhatsApp Image 2026-01-27 at 2.59.25 PM.jpeg"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "lib/assets/icons/WhatsApp Image 2026-01-27 at 2.59.25 PM.jpeg"
+  image_path: "lib/assets/icons/logo.png"
 
 flutter:
   uses-material-design: true

@@ -22,16 +22,17 @@ class AppConfig {
   static String get profileEndpoint => '/auth/profile';
   static String get passwordEndpoint => '/auth/password';
 
-  // Merchant Product Endpoints (uses merchant-specific routes)
-  static String get productsEndpoint => '/products/merchant/my-products';
-  static String get createProductEndpoint => '/products/merchant';
-  static String productEndpoint(String id) => '/products/merchant/$id';
+  // Merchant Product Endpoints
+  // Backend routes: GET /api/products/my-products, POST /api/products, PUT/DELETE /api/products/:id
+  static String get productsEndpoint => '/products/my-products';
+  static String get createProductEndpoint => '/products';
+  static String productEndpoint(String id) => '/products/$id';
 
   // Category Endpoints
   static String get categoriesEndpoint => '/categories';
 
   // Order Endpoints (merchant orders)
-  static String get ordersEndpoint => '/orders/merchant';
+  static String get ordersEndpoint => '/orders/merchant/orders';
   static String orderEndpoint(String id) => '/orders/$id';
   static String orderStatusEndpoint(String id) => '/orders/$id/status';
 
