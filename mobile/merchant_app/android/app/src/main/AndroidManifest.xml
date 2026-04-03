@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="Commerçant"
+        android:label="Toumai Market - Commerçant"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -8,11 +8,25 @@ const connectDB = async () => {
   }
 
   try {
-    const conn = await mongoose.connect(uri);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log('Attempting to connect to MongoDB Atlas...');
+    const conn = await mongoose.connect(uri, {
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 30000,
+      serverSelectionTimeoutMS: 10000,
+      retryWrites: true,
+      w: 'majority'
+    });
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    return conn;
   } catch (error) {
-    console.error(`MongoDB connection error: ${error.message}`);
-    process.exit(1);
+    console.error(`❌ MongoDB connection error: ${error.message}`);
+    console.error('Full error:', error);
+    // Don't exit, let the app run and show errors on API calls
+    // This helps with debugging
+    setTimeout(() => {
+      console.error('Retrying MongoDB connection...');
+      connectDB();
+    }, 5000);
   }
 };
 
