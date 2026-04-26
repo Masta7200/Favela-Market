@@ -33,15 +33,19 @@ class AuthProvider extends ChangeNotifier {
 
       if (token != null && savedUser != null) {
         _user = savedUser;
-        _isAuthenticated = true;
+        // Don't set _isAuthenticated yet - validate token first
+        _isAuthenticated = false;
 
         // Fetch latest user data to ensure token is still valid
         await fetchUserProfile();
+      } else {
+        _isAuthenticated = false;
       }
 
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
+      _isAuthenticated = false;
       _isInitialized = true;
       notifyListeners();
     }
@@ -93,15 +97,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
-        final token = response['data']['token'];
-        final userData = response['data']['user'];
-
-        await StorageService.saveToken(token);
-
-        _user = UserModel.fromJson(userData);
-        await StorageService.saveUser(_user!);
-
-        _isAuthenticated = true;
+        // Registration successful - user must login to authenticate
         _setLoading(false);
         return true;
       }
@@ -176,7 +172,7 @@ class AuthProvider extends ChangeNotifier {
       if (response['success'] == true) {
         _user = UserModel.fromJson(response['data']['user']);
         await StorageService.saveUser(_user!);
-        _isAuthenticated = true;
+        _isAuthenticated = true; // Set authenticated only after successful validation
         notifyListeners();
       } else {
         // Token might be expired
@@ -187,9 +183,9 @@ class AuthProvider extends ChangeNotifier {
         // Unauthorized - token expired
         await logout();
       }
-      // For other errors, keep using cached user data
+      // For other errors, keep current state but don't set authenticated
     } catch (e) {
-      // Silently fail, keep using cached user data
+      // Silently fail, keep current state
     }
   }
 

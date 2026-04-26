@@ -1,4 +1,6 @@
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -17,7 +19,13 @@ import '../screens/profile/profile_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/addresses_screen.dart';
 import '../screens/profile/add_address_screen.dart';
+import '../providers/auth.dart';
 import '../services/storageservices.dart';
+
+class AppRouter {
+  static final GoRouter router = GoRouter(
+    initialLocation: '/splash',
+    routes: [
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -144,10 +152,21 @@ class AppRouter {
 
     // Redirect logic
     redirect: (context, state) async {
-      final isAuthenticated = await _checkAuthentication();
+      // Get AuthProvider from context
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      // Wait for auth initialization if not done yet
+      if (!authProvider.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        return null; // Let the redirect happen again after initialization
+      }
+
+      final isAuthenticated = authProvider.isAuthenticated;
       final isOnSplash = state.uri.toString() == '/splash';
       final isOnAuth = state.uri.toString().startsWith('/login') ||
-          state.uri.toString().startsWith('/register');
+          state.uri.toString().startsWith('/register') ||
+          state.uri.toString().startsWith('/forgot-password') ||
+          state.uri.toString().startsWith('/reset-password');
 
       // If not authenticated and not on auth pages, redirect to login
       if (!isAuthenticated && !isOnAuth && !isOnSplash) {
@@ -162,9 +181,4 @@ class AppRouter {
       return null; // No redirect needed
     },
   );
-
-  static Future<bool> _checkAuthentication() async {
-    final token = await StorageService.getToken();
-    return token != null && token.isNotEmpty;
-  }
 }
