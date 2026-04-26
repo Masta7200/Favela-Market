@@ -16,8 +16,16 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'L\'adresse de livraison est requise' });
     }
 
-    let total = 0;
-    const processedItems = [];
+    // Convert deliveryAddress object to string if needed
+    let deliveryAddressString = deliveryAddress;
+    if (typeof deliveryAddress === 'object') {
+      deliveryAddressString = `${deliveryAddress.fullAddress}, ${deliveryAddress.quarter}, ${deliveryAddress.city}`;
+      if (deliveryAddress.details) {
+        deliveryAddressString += ` (${deliveryAddress.details})`;
+      }
+    }
+
+    let merchantId;
 
     // Validate and calculate total
     for (const item of items) {
@@ -28,6 +36,11 @@ exports.createOrder = async (req, res) => {
 
       if (product.stock < item.quantity) {
         return res.status(400).json({ success: false, message: `Stock insuffisant pour ${product.name}` });
+      }
+
+      // Set merchant from first product
+      if (!merchantId) {
+        merchantId = product.merchant;
       }
 
       const subtotal = product.price * item.quantity;
@@ -44,10 +57,10 @@ exports.createOrder = async (req, res) => {
     // Create order
     const order = await Order.create({
       client: clientId,
-      merchant: items[0]?.merchant || processedItems[0].product.merchant,
+      merchant: merchantId,
       items: processedItems,
       total,
-      deliveryAddress,
+      deliveryAddress: deliveryAddressString,
       deliveryPhone: deliveryPhone || req.user.phone,
       paymentMethod: paymentMethod || 'cash',
       notes

@@ -24,8 +24,7 @@ class OrderProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      final response =
-          await _apiService.get('${AppConfig.ordersEndpoint}/client/orders');
+      final response = await _apiService.get(AppConfig.ordersEndpoint);
 
       if (response['success'] == true) {
         final List<dynamic> data = response['data'] ?? [];
