@@ -172,7 +172,8 @@ class AuthProvider extends ChangeNotifier {
       if (response['success'] == true) {
         _user = UserModel.fromJson(response['data']['user']);
         await StorageService.saveUser(_user!);
-        _isAuthenticated = true; // Set authenticated only after successful validation
+        _isAuthenticated =
+            true; // Set authenticated only after successful validation
         notifyListeners();
       } else {
         // Token might be expired
