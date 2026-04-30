@@ -201,12 +201,12 @@ export default function LandingPage() {
                 </button>
               </form>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              {/* <div className="mt-6 pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-500 text-center">
                   Compte de test: <br />
                   <span className="font-mono text-gray-700">+237600000000 / admin123</span>
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
