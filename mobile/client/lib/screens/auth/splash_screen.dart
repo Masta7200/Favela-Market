@@ -113,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                 // App Name
                 Text(
-                  'Favela Market',
+                  'Tumai Market',
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

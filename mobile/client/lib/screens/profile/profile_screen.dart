@@ -144,7 +144,7 @@ class ProfileScreen extends StatelessWidget {
                           onTap: () {
                             showAboutDialog(
                               context: context,
-                              applicationName: 'Favela Market',
+                              applicationName: 'Tumai Market',
                               applicationVersion: '1.0.0',
                               children: [
                                 const Text(

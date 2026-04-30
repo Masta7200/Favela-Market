@@ -1,6 +1,6 @@
-# Favela Market - Merchant App
+# Tumai Market - Merchant App
 
-Beautiful Flutter app for shop owners to manage their business on Favela Market.
+Beautiful Flutter app for shop owners to manage their business on Tumai Market.
 
 ## 🏪 Features
 
@@ -172,13 +172,13 @@ lib/
 ## 🤝 Support
 
 For merchant support:
-- Email: merchant@favelamarket.cm
+- Email: merchant@tumaimarket.cm
 - Phone: +23599507200 
 - WhatsApp: +23599507200 
 
 ---
 
-Built with ❤️ for Favela Market Shop Owners
+Built with ❤️ for Tumai Market Shop Owners
 EOF
 
 echo "✅ Created README.md"

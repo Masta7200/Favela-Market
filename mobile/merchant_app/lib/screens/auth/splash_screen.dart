@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Favela Market',
+                    'Tumai Market',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,

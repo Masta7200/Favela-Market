@@ -1,6 +1,6 @@
-# Favela Market - Client App (Flutter)
+# Tumai Market - Client App (Flutter)
 
-Application mobile client pour Favela Market - Marketplace multi-vendeurs
+Application mobile client pour Tumai Market - Marketplace multi-vendeurs
 
 ## 📱 Features (MVP)
 
@@ -293,4 +293,4 @@ Private and proprietary.
 
 ---
 
-**Favela Market** - Votre marketplace de confiance
+**Tumai Market** - Votre marketplace de confiance

@@ -1,5 +1,5 @@
-name: favela_market_client
-description: Application client pour Favela Market - Marketplace multi-vendeurs
+name: tumai_market_client
+description: Application client pour Tumai Market - Marketplace multi-vendeurs
 publish_to: 'none'
 version: 1.0.0+1
 

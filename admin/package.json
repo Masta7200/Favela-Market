@@ -2,6 +2,9 @@
   "name": "admin",
   "private": true,
   "version": "0.0.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -27,12 +27,12 @@ class AppConfig {
   static const int pageSize = 20;
 
   // App Info
-  static const String appName = 'Favela Market';
+  static const String appName = 'Tumai Market';
   static const String appVersion = '1.0.0';
   static const String currency = 'FCFA';
   static const String phonePrefix = '+235';
 
   // Support
   static const String supportPhone = '+235600000000';
-  static const String supportEmail = 'support@favelamarket.cm';
+  static const String supportEmail = 'support@tumaimarket.cm';
 }

@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Favela Market', style: TextStyle(fontSize: 20)),
+            const Text('Tumai Market', style: TextStyle(fontSize: 20)),
             Text(
               'Bonjour, ${authProvider.user?.name ?? "Client"}',
               style: Theme.of(context).textTheme.bodySmall,

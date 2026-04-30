@@ -37,12 +37,12 @@ class AppConfig {
   static String orderStatusEndpoint(String id) => '/orders/$id/status';
 
   // App Info
-  static const String appName = 'Favela Market - Vendeur';
+  static const String appName = 'Tumai Market - Vendeur';
   static const String appVersion = '1.0.0';
   static const String currency = 'FCFA';
   static const String countryCode = 'TD'; // Chad
 
   // Support
-  static const String supportEmail = 'support@favelamarket.com';
+  static const String supportEmail = 'support@tumaimarket.com';
   static const String supportPhone = '+235 00 00 00 00';
 }
