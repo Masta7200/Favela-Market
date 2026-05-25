@@ -49,25 +49,25 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-6 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+      <section className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-2 items-center">
+          <div className="text-center lg:text-left">
+            <h1 className="text-4xl font-bold mb-6 leading-tight sm:text-5xl lg:text-6xl">
               <span className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
                 Gérez Votre
               </span>
               <br />
               Marketplace en Toute Simplicité
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Tableau de bord administrateur complet pour Toumaï Market. 
+            <p className="text-lg text-gray-600 mb-8 sm:text-xl">
+              Tableau de bord administrateur complet pour Toumaï Market.
               Gérez les vendeurs, produits, commandes et bien plus encore.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <a href="#login" className="btn btn-primary text-lg px-8 py-3">
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+              <a href="#login" className="btn btn-primary w-full sm:w-auto text-lg px-8 py-3">
                 Commencer
               </a>
-              <a href="#features" className="btn btn-secondary text-lg px-8 py-3">
+              <a href="#features" className="btn btn-secondary w-full sm:w-auto text-lg px-8 py-3">
                 En savoir plus
               </a>
             </div>
@@ -97,7 +97,7 @@ export default function LandingPage() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <FeatureCard
               icon={Users}
               title="Gestion Utilisateurs"
@@ -143,9 +143,9 @@ export default function LandingPage() {
       </section>
 
       {/* Login Section */}
-      <section id="login" className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-md mx-auto">
+      <section id="login" className="py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mx-auto">
             <div className="card">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">

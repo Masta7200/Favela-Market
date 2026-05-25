@@ -40,9 +40,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-transform ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } bg-white border-r border-gray-200 w-64`}
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto transition-transform duration-300 bg-white border-r border-gray-200 shadow-xl
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
         <div className="h-full flex flex-col">
           {/* Logo */}
@@ -107,19 +106,26 @@ export default function Dashboard() {
         </div>
       </aside>
 
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
+
       {/* Main Content */}
-      <div className={`transition-all ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+      <div className="min-h-screen transition-all duration-300 md:ml-64">
         {/* Top Bar */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors md:hidden"
             >
               {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-between w-full sm:justify-end sm:space-x-4">
               <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
                 <Bell className="w-6 h-6 text-gray-600" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
