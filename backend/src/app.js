@@ -25,6 +25,27 @@ app.use('/api/categories', require('./routes/categories'));
 // Orders routes
 app.use('/api/orders', require('./routes/orders'));
 
+// DEBUG: print registered routes for troubleshooting deployed routing
+// (temporary - remove after debug)
+const listRoutes = () => {
+  try {
+    const routes = [];
+    app._router.stack.forEach((mw) => {
+      if (mw.route && mw.route.path) {
+        routes.push({ path: mw.route.path, methods: Object.keys(mw.route.methods) });
+      } else if (mw.name === 'router' && mw.handle && mw.handle.stack) {
+        mw.handle.stack.forEach((r) => {
+          if (r.route && r.route.path) routes.push({ path: r.route.path, methods: Object.keys(r.route.methods) });
+        });
+      }
+    });
+    console.log('Registered routes:', JSON.stringify(routes, null, 2));
+  } catch (err) {
+    console.error('listRoutes error', err);
+  }
+};
+listRoutes();
+
 // Serve admin build in production
 if (process.env.NODE_ENV === 'production') {
   const adminDist = path.join(__dirname, '..', '..', 'admin', 'dist');
