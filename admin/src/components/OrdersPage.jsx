@@ -53,6 +53,22 @@ export default function OrdersPage() {
     }
   };
 
+  const deleteOrder = async (orderId) => {
+    if (!window.confirm('Voulez-vous vraiment supprimer cette commande ?')) {
+      return;
+    }
+
+    try {
+      const response = await api.delete(ENDPOINTS.DELETE_ORDER(orderId));
+      if (response.success) {
+        await fetchOrders();
+        alert('Commande supprimée avec succès');
+      }
+    } catch (error) {
+      alert('Erreur lors de la suppression de la commande');
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     if (!searchQuery.trim()) return true;
     
@@ -263,13 +279,20 @@ export default function OrdersPage() {
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString('fr-FR')}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right space-x-2">
                         <button
                           onClick={() => viewOrderDetails(order._id)}
                           className="btn bg-primary-100 text-primary-700 hover:bg-primary-200 text-sm"
                         >
                           <Eye className="w-4 h-4 mr-1" />
                           Voir
+                        </button>
+                        <button
+                          onClick={() => deleteOrder(order._id)}
+                          className="btn bg-red-100 text-red-700 hover:bg-red-200 text-sm"
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Supprimer
                         </button>
                       </td>
                     </tr>
@@ -358,13 +381,18 @@ export default function OrdersPage() {
               <div>
                 <h3 className="font-bold mb-3">Adresse de livraison</h3>
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="font-medium">{selectedOrder.deliveryAddress?.label}</p>
+                  <p className="font-medium">
+                    {selectedOrder.deliveryAddress?.label || selectedOrder.deliveryAddress || 'N/A'}
+                  </p>
                   <p className="text-sm text-gray-600 mt-1">
-                    {selectedOrder.deliveryAddress?.fullAddress}
+                    {selectedOrder.deliveryAddress?.fullAddress || selectedOrder.deliveryAddress || ''}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    {selectedOrder.deliveryAddress?.quarter}, {selectedOrder.deliveryAddress?.city}
-                  </p>
+                  {selectedOrder.deliveryAddress?.city && (
+                    <p className="text-sm text-gray-600">
+                      {selectedOrder.deliveryAddress?.quarter ? `${selectedOrder.deliveryAddress.quarter}, ` : ''}
+                      {selectedOrder.deliveryAddress.city}
+                    </p>
+                  )}
                 </div>
               </div>
 

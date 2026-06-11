@@ -147,17 +147,14 @@ class OrderProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      final response = await _apiService.delete(
-        '${AppConfig.ordersEndpoint}/$orderId',
-        // {},
+      final response = await _apiService.post(
+        '${AppConfig.ordersEndpoint}/$orderId/cancel',
+        {},
       );
 
       if (response['success'] == true) {
-        // Update local order status
-        final index = _orders.indexWhere((order) => order.id == orderId);
-        if (index >= 0) {
-          await fetchOrders(); // Refresh orders
-        }
+        // Refresh orders after cancellation
+        await fetchOrders();
         _isLoading = false;
         notifyListeners();
         return true;

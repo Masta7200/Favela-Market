@@ -1,6 +1,5 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/material.dart';
 
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -20,7 +19,6 @@ import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/addresses_screen.dart';
 import '../screens/profile/add_address_screen.dart';
 import '../providers/auth.dart';
-import '../services/storageservices.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(

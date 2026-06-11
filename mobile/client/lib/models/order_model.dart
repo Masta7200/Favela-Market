@@ -42,7 +42,15 @@ class OrderModel {
       deliveryFee: (json['deliveryFee'] ?? 0).toDouble(),
       total: (json['total'] ?? 0).toDouble(),
       paymentMethod: json['paymentMethod'] ?? 'cod',
-      deliveryAddress: AddressModel.fromJson(json['deliveryAddress'] ?? {}),
+      deliveryAddress: json['deliveryAddress'] is String
+          ? AddressModel(
+              label: json['deliveryAddress'],
+              fullAddress: json['deliveryAddress'],
+              city: '',
+              quarter: null,
+              details: null,
+            )
+          : AddressModel.fromJson(json['deliveryAddress'] ?? {}),
       notes: json['notes'],
       createdAt:
           json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,

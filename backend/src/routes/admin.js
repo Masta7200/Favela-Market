@@ -40,5 +40,6 @@ router.put('/categories/:id/toggle-status', categoryController.toggleCategorySta
 router.get('/orders', adminController.getOrders);
 router.get('/orders/:orderId', adminController.getOrderById);
 router.put('/orders/:orderId/status', adminController.updateOrderStatus);
+router.delete('/orders/:orderId', adminController.deleteOrder);
 
 module.exports = router;

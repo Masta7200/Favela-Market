@@ -24,13 +24,18 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'L\'adresse de livraison est requise' });
     }
 
-    // Convert deliveryAddress object to string if needed
-    let deliveryAddressString = deliveryAddress;
-    if (typeof deliveryAddress === 'object') {
-      deliveryAddressString = `${deliveryAddress.fullAddress}, ${deliveryAddress.quarter}, ${deliveryAddress.city}`;
-      if (deliveryAddress.details) {
-        deliveryAddressString += ` (${deliveryAddress.details})`;
-      }
+    // Convert deliveryAddress object to structured object if needed
+    let deliveryAddressValue = deliveryAddress;
+    if (typeof deliveryAddress === 'object' && deliveryAddress !== null) {
+      deliveryAddressValue = {
+        label: `${deliveryAddress.fullAddress}, ${deliveryAddress.quarter ?? ''}, ${deliveryAddress.city}`
+            .replace(/, ,/g, ',')
+            .replace(/, $/, ''),
+        fullAddress: deliveryAddress.fullAddress,
+        city: deliveryAddress.city,
+        quarter: deliveryAddress.quarter,
+        details: deliveryAddress.details,
+      };
     }
 
     let merchantId;
@@ -75,7 +80,7 @@ exports.createOrder = async (req, res) => {
       merchant: merchantId,
       items: processedItems,
       total,
-      deliveryAddress: deliveryAddressString,
+      deliveryAddress: deliveryAddressValue,
       deliveryPhone: deliveryPhone || req.user.phone,
       paymentMethod: normalizedPaymentMethod,
       notes

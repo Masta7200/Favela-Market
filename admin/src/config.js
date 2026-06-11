@@ -30,6 +30,7 @@ export const ENDPOINTS = {
   ORDERS: '/admin/orders',
   ORDER_BY_ID: (id) => `/admin/orders/${id}`,
   UPDATE_ORDER_STATUS: (id) => `/admin/orders/${id}/status`,
+  DELETE_ORDER: (id) => `/admin/orders/${id}`,
   
   // Delivery Personnel
   DELIVERY: '/admin/delivery',

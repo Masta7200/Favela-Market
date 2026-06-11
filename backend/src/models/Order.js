@@ -42,7 +42,7 @@ const orderSchema = new mongoose.Schema({
     min: 0
   },
   deliveryAddress: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: true
   },
   deliveryPhone: {

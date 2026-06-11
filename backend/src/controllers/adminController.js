@@ -123,6 +123,35 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
+// Delete order (admin)
+exports.deleteOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Commande introuvable' });
+    }
+
+    if (!['delivered', 'completed'].includes(order.status)) {
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: item.quantity }
+        });
+      }
+    }
+
+    await Order.findByIdAndDelete(orderId);
+
+    res.json({
+      success: true,
+      message: 'Commande supprimée avec succès'
+    });
+  } catch (err) {
+    console.error('deleteOrder error', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
 // Get all users (with optional role filter)
 exports.getUsers = async (req, res) => {
   try {
