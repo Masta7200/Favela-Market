@@ -12,6 +12,7 @@ router.post('/', authorize(USER_ROLES.CLIENT), orderController.createOrder);
 
 // Get user's orders (client sees their orders, merchants see their orders)
 router.get('/', orderController.getUserOrders);
+router.get('/merchant/orders', orderController.getUserOrders);
 
 // Get specific order
 router.get('/:orderId', orderController.getOrder);

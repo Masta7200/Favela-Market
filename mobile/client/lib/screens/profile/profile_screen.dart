@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
 import '../../providers/auth.dart';
+import '../../providers/order_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -194,6 +195,7 @@ class ProfileScreen extends StatelessWidget {
 
                         if (confirm == true && context.mounted) {
                           await context.read<AuthProvider>().logout();
+                          context.read<OrderProvider>().clearOrders();
                           if (context.mounted) {
                             context.go('/login');
                           }

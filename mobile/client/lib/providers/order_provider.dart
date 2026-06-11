@@ -27,7 +27,7 @@ class OrderProvider extends ChangeNotifier {
       final response = await _apiService.get(AppConfig.ordersEndpoint);
 
       if (response['success'] == true) {
-        final List<dynamic> data = response['data'] ?? [];
+        final List<dynamic> data = (response['data']?['orders'] ?? []) as List;
         _orders = data.map((json) => OrderModel.fromJson(json)).toList();
 
         // Sort by date (newest first)
@@ -59,7 +59,8 @@ class OrderProvider extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
-        _currentOrder = OrderModel.fromJson(response['data']);
+        final orderData = response['data']?['order'] ?? response['data'];
+        _currentOrder = OrderModel.fromJson(orderData);
         _isLoading = false;
         Future.microtask(() => notifyListeners());
         return _currentOrder;
@@ -113,8 +114,7 @@ class OrderProvider extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
-        // Handle both 'order' and 'data' keys in response
-        final orderData = response['data'];
+        final orderData = response['data']?['order'] ?? response['data'];
         final order = OrderModel.fromJson(orderData);
         _orders.insert(0, order); // Add to beginning
         _isLoading = false;
@@ -184,6 +184,15 @@ class OrderProvider extends ChangeNotifier {
   // Clear current order
   void clearCurrentOrder() {
     _currentOrder = null;
+    notifyListeners();
+  }
+
+  // Clear all loaded orders and reset state
+  void clearOrders() {
+    _orders = [];
+    _currentOrder = null;
+    _error = null;
+    _isLoading = false;
     notifyListeners();
   }
 }

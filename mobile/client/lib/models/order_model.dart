@@ -114,10 +114,21 @@ class OrderItemModel {
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    // Extract product image from images array or single image field
+    String? productImage;
+    if (json['product'] is Map &&
+        (json['product']['images'] as List?)?.isNotEmpty == true) {
+      productImage = (json['product']['images'] as List).first;
+    } else if (json['productImage'] != null) {
+      productImage = json['productImage'];
+    } else if (json['product']?['image'] != null) {
+      productImage = json['product']['image'];
+    }
+
     return OrderItemModel(
       productId: json['productId'] ?? json['product']?['_id'] ?? '',
       productName: json['productName'] ?? json['product']?['name'] ?? '',
-      productImage: json['productImage'] ?? json['product']?['image'],
+      productImage: productImage,
       price: (json['price'] ?? 0).toDouble(),
       quantity: json['quantity'] ?? 1,
       subtotal: (json['subtotal'] ?? 0).toDouble(),

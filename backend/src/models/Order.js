@@ -88,13 +88,14 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Auto-increment order number
-orderSchema.pre('save', async function(next) {
-  if (this.isNew) {
-    const lastOrder = await this.constructor.findOne().sort({ _id: -1 });
-    const lastNumber = lastOrder ? parseInt(lastOrder.orderNumber.replace('ORD-', '')) : 0;
+orderSchema.pre('validate', async function() {
+  if (!this.orderNumber) {
+    const lastOrder = await this.constructor.findOne({ orderNumber: { $exists: true } }).sort({ _id: -1 });
+    const lastNumber = lastOrder && lastOrder.orderNumber
+      ? parseInt(lastOrder.orderNumber.replace('ORD-', ''))
+      : 0;
     this.orderNumber = `ORD-${String(lastNumber + 1).padStart(6, '0')}`;
   }
-  next();
 });
 
 module.exports = mongoose.model('Order', orderSchema);

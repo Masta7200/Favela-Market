@@ -26,11 +26,6 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
     routes: [
-
-class AppRouter {
-  static final GoRouter router = GoRouter(
-    initialLocation: '/splash',
-    routes: [
       // Splash Screen
       GoRoute(
         path: '/splash',

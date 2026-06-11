@@ -2,6 +2,14 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
 
+const generateOrderNumber = async () => {
+  const lastOrder = await Order.findOne({ orderNumber: { $exists: true } }).sort({ _id: -1 });
+  const lastNumber = lastOrder && lastOrder.orderNumber
+    ? parseInt(lastOrder.orderNumber.replace('ORD-', ''))
+    : 0;
+  return `ORD-${String(lastNumber + 1).padStart(6, '0')}`;
+};
+
 // Create a new order
 exports.createOrder = async (req, res) => {
   try {
@@ -26,6 +34,11 @@ exports.createOrder = async (req, res) => {
     }
 
     let merchantId;
+    let total = 0;
+    const processedItems = [];
+
+    // Normalize payment method to backend enum values
+    const normalizedPaymentMethod = paymentMethod == 'cod' ? 'cash' : paymentMethod || 'cash';
 
     // Validate and calculate total
     for (const item of items) {
@@ -55,14 +68,16 @@ exports.createOrder = async (req, res) => {
     }
 
     // Create order
+    const orderNumber = await generateOrderNumber();
     const order = await Order.create({
+      orderNumber,
       client: clientId,
       merchant: merchantId,
       items: processedItems,
       total,
       deliveryAddress: deliveryAddressString,
       deliveryPhone: deliveryPhone || req.user.phone,
-      paymentMethod: paymentMethod || 'cash',
+      paymentMethod: normalizedPaymentMethod,
       notes
     });
 
@@ -73,7 +88,8 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    const populatedOrder = await order.populate('client', 'name phone email')
+    const populatedOrder = await Order.findById(order._id)
+      .populate('client', 'name phone email')
       .populate('merchant', 'shopName phone')
       .populate('items.product', 'name price images');
 

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/auth.dart';
+import '../../providers/order_provider.dart';
 import '../../widgets/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -46,6 +47,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
+      // Refresh orders for the authenticated client immediately after login
+      await context.read<OrderProvider>().fetchOrders();
       context.go('/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
