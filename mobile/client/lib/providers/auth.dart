@@ -273,6 +273,7 @@ class AuthProvider extends ChangeNotifier {
   // Request password reset (send OTP)
   Future<bool> requestPasswordReset({
     required String phone,
+    required String email,
   }) async {
     try {
       _setLoading(true);
