@@ -44,7 +44,7 @@ const listRoutes = () => {
     console.error('listRoutes error', err);
   }
 };
-listRoutes();
+// listRoutes();
 
 // Serve admin build in production
 if (process.env.NODE_ENV === 'production') {
