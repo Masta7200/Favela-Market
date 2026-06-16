@@ -2,14 +2,6 @@ const User = require('../models/User');
 const { USER_ROLES } = require('../constants');
 const sendEmail = require('../utils/sendEmail');
 
-// Mask an email for display, e.g. "amazezerti0103@gmail.com" -> "am***0103@gmail.com"
-const maskEmail = (email) => {
-  const [local, domain] = email.split('@');
-  if (!domain) return email;
-  if (local.length <= 4) return `${local[0] || ''}***@${domain}`;
-  return `${local.slice(0, 2)}***${local.slice(-4)}@${domain}`;
-};
-
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -78,22 +70,15 @@ exports.register = async (req, res, next) => {
 // @access  Public
 exports.forgotPassword = async (req, res, next) => {
   try {
-    const { phone } = req.body;
+    const { email } = req.body;
 
-    if (!phone) {
-      return res.status(400).json({ success: false, message: 'Veuillez fournir le numéro de téléphone' });
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Veuillez fournir votre adresse email' });
     }
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
-    }
-
-    if (!user.email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Aucun email n\'est associé à ce compte. Contactez le support pour réinitialiser votre mot de passe.'
-      });
+      return res.status(404).json({ success: false, message: 'Aucun compte associé à cet email' });
     }
 
     const otp = user.generateOTP();
@@ -124,7 +109,6 @@ exports.forgotPassword = async (req, res, next) => {
       success: true,
       message: 'Un code a été envoyé à votre adresse email',
       data: {
-        maskedEmail: maskEmail(user.email),
         // Only expose the OTP outside production, to ease local testing
         ...(process.env.NODE_ENV !== 'production' ? { otp } : {})
       }
@@ -139,15 +123,15 @@ exports.forgotPassword = async (req, res, next) => {
 // @access  Public
 exports.resetPassword = async (req, res, next) => {
   try {
-    const { phone, otp, newPassword } = req.body;
+    const { email, otp, newPassword } = req.body;
 
-    if (!phone || !otp || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Téléphone, OTP et nouveau mot de passe requis' });
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Email, OTP et nouveau mot de passe requis' });
     }
 
-    const user = await User.findOne({ phone }).select('+password');
+    const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+      return res.status(404).json({ success: false, message: 'Aucun compte associé à cet email' });
     }
 
     const isValid = user.verifyOTP(otp);
@@ -428,5 +412,40 @@ exports.updateFCMToken = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+exports.requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email est requis' });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    user.resetOtp = otp;
+    user.resetOtpExpiry = otpExpiry;
+    await user.save();
+
+    // Send OTP to email
+    await sendEmail(user.email, 'Réinitialiser votre mot de passe', `Votre code OTP: ${otp}`);
+
+    res.json({
+      success: true,
+      message: 'Code envoyé à votre email',
+      maskedEmail: maskEmail(user.email)
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

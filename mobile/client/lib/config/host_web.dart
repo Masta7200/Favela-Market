@@ -1,9 +1,6 @@
 String getHost() {
-  // For production, use the deployed Render URL
-  // For development, use localhost
-  const bool isProduction = const bool.fromEnvironment('dart.vm.product');
-  const String productionUrl = String.fromEnvironment('PRODUCTION_API_URL',
+  // Always talk to the hosted backend by default (see host_io.dart for the
+  // rationale). Override with --dart-define=PRODUCTION_API_URL=... for local dev.
+  return const String.fromEnvironment('PRODUCTION_API_URL',
       defaultValue: 'https://tumai-backend.onrender.com');
-
-  return isProduction ? productionUrl : 'http://localhost:5000';
 }

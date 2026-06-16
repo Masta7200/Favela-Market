@@ -29,28 +29,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _isLoading = true);
     final auth = context.read<AuthProvider>();
 
-    final success = await auth.requestPasswordReset(
-        email: _emailController.text.trim(), phone: '');
+    final success =
+        await auth.requestPasswordReset(email: _emailController.text.trim());
 
     setState(() => _isLoading = false);
 
     if (success) {
-      final maskedEmail = auth.maskedResetEmail;
+      final email = _emailController.text.trim();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              maskedEmail != null
-                  ? 'Code envoyé à $maskedEmail'
-                  : 'Code envoyé par email',
-            ),
-          ),
+          SnackBar(content: Text('Code envoyé à $email')),
         );
       }
       // Navigate to reset screen, pass email
       if (mounted) {
-        context.push('/reset-password',
-            extra: {'email': _emailController.text.trim()});
+        context.push('/reset-password', extra: {'email': email});
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

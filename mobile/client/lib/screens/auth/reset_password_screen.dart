@@ -6,8 +6,8 @@ import '../../providers/auth.dart';
 import '../../widgets/custom_button.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  final String? phone;
-  const ResetPasswordScreen({super.key, this.phone});
+  final String? email;
+  const ResetPasswordScreen({super.key, this.email});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -19,7 +19,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _isLoading = false;
-  String? _phone;
+  String? _email;
 
   @override
   void dispose() {
@@ -32,7 +32,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _phone = widget.phone;
+    _email = widget.email;
   }
 
   Future<void> _reset() async {
@@ -41,7 +41,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     setState(() => _isLoading = true);
     final auth = context.read<AuthProvider>();
     final success = await auth.resetPassword(
-        phone: _phone ?? '',
+        email: _email ?? '',
         otp: _otpController.text.trim(),
         newPassword: _passwordController.text.trim());
     setState(() => _isLoading = false);

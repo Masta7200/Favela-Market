@@ -1,28 +1,19 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
-
 class AppConfig {
   // API Base URL - adjust for your environment
   static String get baseUrl {
-    // In a release/profile build, use the deployed backend.
-    const bool isProduction = bool.fromEnvironment('dart.vm.product');
+    // Always talk to the hosted backend by default - this matters for debug
+    // builds on a real device too: 'dart.vm.product' is only true in
+    // release/profile mode, so a plain `flutter run` on a physical phone
+    // would otherwise fall through to the emulator-only 10.0.2.2 address,
+    // which a real device can never reach.
+    //
+    // To point at a backend running on your own machine instead, pass it
+    // explicitly, e.g.:
+    //   flutter run --dart-define=PRODUCTION_API_URL=http://10.0.2.2:5000   (Android emulator)
+    //   flutter run --dart-define=PRODUCTION_API_URL=http://localhost:5000  (iOS sim/desktop/web)
     const String productionUrl = String.fromEnvironment('PRODUCTION_API_URL',
         defaultValue: 'https://tumai-backend.onrender.com');
-
-    if (isProduction) {
-      return '$productionUrl/api';
-    }
-
-    if (kIsWeb) {
-      return 'http://localhost:5000/api';
-    }
-    // For Android emulator, use 10.0.2.2 to access host machine
-    // For iOS simulator, use localhost
-    // For physical devices, use your machine's IP address
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5000/api';
-    }
-    return 'http://localhost:5000/api';
+    return '$productionUrl/api';
   }
 
   // Auth Endpoints

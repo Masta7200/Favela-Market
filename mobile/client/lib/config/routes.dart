@@ -48,7 +48,7 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return ResetPasswordScreen(
-              phone: extra != null ? extra['phone'] as String? : null);
+              email: extra != null ? extra['email'] as String? : null);
         },
       ),
       GoRoute(
