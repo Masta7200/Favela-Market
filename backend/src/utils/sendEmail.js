@@ -1,48 +1,48 @@
-const nodemailer = require('nodemailer');
+// Sends email via Brevo's HTTPS REST API (not SMTP).
+//
+// Why: Render's free tier blocks outbound raw SMTP connections (port 25/465/587),
+// so nodemailer + Gmail/any SMTP relay will always fail there with
+// ETIMEDOUT/ENETUNREACH. An HTTPS API call is not affected by that restriction.
+//
+// Setup required (see project notes): create a free Brevo account, verify a
+// "sender" email address (one-click email confirmation, no DNS needed), then
+// set BREVO_API_KEY and EMAIL_FROM (must match the verified sender) as env vars.
 
-let transporter = null;
-
-// Lazily build the transporter from env vars so the app doesn't crash on boot
-// if email isn't configured yet (it will just fail when actually sending).
-const getTransporter = () => {
-  if (transporter) return transporter;
-
-  const { EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS } = process.env;
-
-  if (!EMAIL_USER || !EMAIL_PASS) {
-    throw new Error(
-      'Email non configuré: définissez EMAIL_USER et EMAIL_PASS (et EMAIL_HOST/EMAIL_PORT si besoin) dans les variables d\'environnement.'
-    );
-  }
-
-  transporter = nodemailer.createTransport({
-    host: EMAIL_HOST || 'smtp.gmail.com',
-    port: Number(EMAIL_PORT) || 465,
-    secure: Number(EMAIL_PORT) !== 587, // true for 465, false for 587 (STARTTLS)
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASS
-    }
-  });
-
-  return transporter;
-};
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 /**
  * Send an email.
  * @param {{to: string, subject: string, html: string, text?: string}} options
  */
 const sendEmail = async ({ to, subject, html, text }) => {
-  const t = getTransporter();
-  const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  const { BREVO_API_KEY, EMAIL_FROM } = process.env;
 
-  await t.sendMail({
-    from: `Tumai Market <${from}>`,
-    to,
-    subject,
-    text: text || html.replace(/<[^>]+>/g, ' '),
-    html
+  if (!BREVO_API_KEY || !EMAIL_FROM) {
+    throw new Error(
+      'Email non configuré: définissez BREVO_API_KEY et EMAIL_FROM dans les variables d\'environnement.'
+    );
+  }
+
+  const response = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'api-key': BREVO_API_KEY
+    },
+    body: JSON.stringify({
+      sender: { name: 'Tumai Market', email: EMAIL_FROM },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text || html.replace(/<[^>]+>/g, ' ')
+    })
   });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
+  }
 };
 
 module.exports = sendEmail;
