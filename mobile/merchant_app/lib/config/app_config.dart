@@ -4,6 +4,15 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class AppConfig {
   // API Base URL - adjust for your environment
   static String get baseUrl {
+    // In a release/profile build, use the deployed backend.
+    const bool isProduction = bool.fromEnvironment('dart.vm.product');
+    const String productionUrl = String.fromEnvironment('PRODUCTION_API_URL',
+        defaultValue: 'https://tumai-backend.onrender.com');
+
+    if (isProduction) {
+      return '$productionUrl/api';
+    }
+
     if (kIsWeb) {
       return 'http://localhost:5000/api';
     }

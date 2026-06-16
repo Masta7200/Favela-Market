@@ -12,6 +12,7 @@ class AuthProvider extends ChangeNotifier {
   String? _error;
   bool _isAuthenticated = false;
   bool _isInitialized = false;
+  String? _maskedResetEmail;
 
   // Getters
   UserModel? get user => _user;
@@ -19,6 +20,8 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _isAuthenticated;
   bool get isInitialized => _isInitialized;
+  // Masked email the last password-reset code was sent to (e.g. "am***0103@gmail.com")
+  String? get maskedResetEmail => _maskedResetEmail;
 
   // Constructor to initialize auth
   AuthProvider() {
@@ -285,6 +288,7 @@ class AuthProvider extends ChangeNotifier {
 
       _setLoading(false);
       if (response['success'] == true) {
+        _maskedResetEmail = response['data']?['maskedEmail'] as String?;
         return true;
       }
 

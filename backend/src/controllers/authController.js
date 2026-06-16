@@ -1,5 +1,14 @@
 const User = require('../models/User');
 const { USER_ROLES } = require('../constants');
+const sendEmail = require('../utils/sendEmail');
+
+// Mask an email for display, e.g. "amazezerti0103@gmail.com" -> "am***0103@gmail.com"
+const maskEmail = (email) => {
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  if (local.length <= 4) return `${local[0] || ''}***@${domain}`;
+  return `${local.slice(0, 2)}***${local.slice(-4)}@${domain}`;
+};
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -80,14 +89,45 @@ exports.forgotPassword = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
     }
 
+    if (!user.email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Aucun email n\'est associé à ce compte. Contactez le support pour réinitialiser votre mot de passe.'
+      });
+    }
+
     const otp = user.generateOTP();
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Tumai Market - Code de réinitialisation du mot de passe',
+        html: `
+          <p>Bonjour ${user.name || ''},</p>
+          <p>Voici votre code de réinitialisation de mot de passe :</p>
+          <h2 style="letter-spacing:4px;">${otp}</h2>
+          <p>Ce code est valable pendant 10 minutes.</p>
+          <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+        `
+      });
+    } catch (emailError) {
+      console.error('forgotPassword sendEmail error', emailError);
+      return res.status(500).json({
+        success: false,
+        message: 'Impossible d\'envoyer l\'email de réinitialisation. Veuillez réessayer plus tard.'
+      });
+    }
+
     await user.save();
 
-    // TODO: integrate SMS/email provider to send OTP. For now return OTP in response for testing.
     res.status(200).json({
       success: true,
-      message: 'Code OTP envoyé',
-      data: { otp: otp }
+      message: 'Un code a été envoyé à votre adresse email',
+      data: {
+        maskedEmail: maskEmail(user.email),
+        // Only expose the OTP outside production, to ease local testing
+        ...(process.env.NODE_ENV !== 'production' ? { otp } : {})
+      }
     });
   } catch (error) {
     next(error);

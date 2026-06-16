@@ -69,7 +69,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    'Entrez le code reçu et choisissez un nouveau mot de passe',
+                    'Entrez le code reçu par email et choisissez un nouveau mot de passe',
                     style: Theme.of(context).textTheme.bodyLarge),
                 const SizedBox(height: 16),
                 TextFormField(

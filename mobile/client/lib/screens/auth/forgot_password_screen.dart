@@ -36,8 +36,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
+      final maskedEmail = auth.maskedResetEmail;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              maskedEmail != null
+                  ? 'Code envoyé à $maskedEmail'
+                  : 'Code envoyé par email',
+            ),
+          ),
+        );
+      }
       // Navigate to reset screen, pass phone
-      context.push('/reset-password', extra: {'phone': _fullPhone});
+      if (mounted) {
+        context.push('/reset-password', extra: {'phone': _fullPhone});
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Erreur lors de la requête')),
@@ -60,6 +74,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 12),
                 Text('Entrez votre numéro de téléphone',
                     style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  'Un code de vérification sera envoyé à l\'adresse email associée à votre compte.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 const SizedBox(height: 8),
                 IntlPhoneField(
                   controller: _phoneController,
