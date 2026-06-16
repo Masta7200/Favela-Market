@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -68,6 +69,12 @@ class ApiService {
           .timeout(AppConfig.receiveTimeout);
 
       return _handleResponse(response);
+    } on TimeoutException {
+      throw ApiException(
+        message:
+            'Le serveur met du temps à répondre (cela peut arriver au premier appel après une période d\'inactivité). Veuillez réessayer.',
+        statusCode: 0,
+      );
     } on SocketException {
       throw ApiException(
         message: 'Pas de connexion internet',
@@ -81,6 +88,12 @@ class ApiService {
     } on FormatException {
       throw ApiException(
         message: 'Format de réponse invalide',
+        statusCode: 0,
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(
+        message: 'Erreur de connexion au serveur. Veuillez réessayer.',
         statusCode: 0,
       );
     }
@@ -103,6 +116,12 @@ class ApiService {
           .timeout(AppConfig.receiveTimeout);
 
       return _handleResponse(response);
+    } on TimeoutException {
+      throw ApiException(
+        message:
+            'Le serveur met du temps à répondre (cela peut arriver au premier appel après une période d\'inactivité). Veuillez réessayer.',
+        statusCode: 0,
+      );
     } on SocketException {
       throw ApiException(
         message: 'Pas de connexion internet',
@@ -116,6 +135,12 @@ class ApiService {
     } on FormatException {
       throw ApiException(
         message: 'Format de réponse invalide',
+        statusCode: 0,
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(
+        message: 'Erreur de connexion au serveur. Veuillez réessayer.',
         statusCode: 0,
       );
     }
@@ -138,6 +163,12 @@ class ApiService {
           .timeout(AppConfig.receiveTimeout);
 
       return _handleResponse(response);
+    } on TimeoutException {
+      throw ApiException(
+        message:
+            'Le serveur met du temps à répondre (cela peut arriver au premier appel après une période d\'inactivité). Veuillez réessayer.',
+        statusCode: 0,
+      );
     } on SocketException {
       throw ApiException(
         message: 'Pas de connexion internet',
@@ -151,6 +182,12 @@ class ApiService {
     } on FormatException {
       throw ApiException(
         message: 'Format de réponse invalide',
+        statusCode: 0,
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(
+        message: 'Erreur de connexion au serveur. Veuillez réessayer.',
         statusCode: 0,
       );
     }
@@ -171,6 +208,12 @@ class ApiService {
           .timeout(AppConfig.receiveTimeout);
 
       return _handleResponse(response);
+    } on TimeoutException {
+      throw ApiException(
+        message:
+            'Le serveur met du temps à répondre (cela peut arriver au premier appel après une période d\'inactivité). Veuillez réessayer.',
+        statusCode: 0,
+      );
     } on SocketException {
       throw ApiException(
         message: 'Pas de connexion internet',
@@ -184,6 +227,12 @@ class ApiService {
     } on FormatException {
       throw ApiException(
         message: 'Format de réponse invalide',
+        statusCode: 0,
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(
+        message: 'Erreur de connexion au serveur. Veuillez réessayer.',
         statusCode: 0,
       );
     }

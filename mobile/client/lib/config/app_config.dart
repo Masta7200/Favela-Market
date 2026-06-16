@@ -14,8 +14,12 @@ class AppConfig {
   static String get addressesEndpoint => '$authEndpoint/addresses';
 
   // Timeouts
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  // Note: the hosted backend is on Render's free tier, which "sleeps" after
+  // inactivity. The first request after a sleep can take 30-60s to wake it
+  // up, so the timeout needs enough headroom or every cold start looks like
+  // a generic connection error.
+  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
 
   // Storage Keys
   static const String tokenKey = 'auth_token';
