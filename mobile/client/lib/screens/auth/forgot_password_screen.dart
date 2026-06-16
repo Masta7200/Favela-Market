@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../config/theme.dart';
 import '../../providers/auth.dart';
 import '../../widgets/custom_button.dart';
@@ -15,13 +14,12 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   bool _isLoading = false;
-  String _fullPhone = '';
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -31,7 +29,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _isLoading = true);
     final auth = context.read<AuthProvider>();
 
-    final success = await auth.requestPasswordReset(phone: _fullPhone);
+    final success = await auth.requestPasswordReset(
+        email: _emailController.text.trim(), phone: '');
 
     setState(() => _isLoading = false);
 
@@ -48,9 +47,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         );
       }
-      // Navigate to reset screen, pass phone
+      // Navigate to reset screen, pass email
       if (mounted) {
-        context.push('/reset-password', extra: {'phone': _fullPhone});
+        context.push('/reset-password',
+            extra: {'email': _emailController.text.trim()});
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,28 +72,31 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 12),
-                Text('Entrez votre numéro de téléphone',
+                Text('Entrez votre adresse email',
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  'Un code de vérification sera envoyé à l\'adresse email associée à votre compte.',
+                  'Un code de vérification sera envoyé à cette adresse email.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),
-                IntlPhoneField(
-                  controller: _phoneController,
-                  initialCountryCode: 'TD',
+                TextFormField(
+                  controller: _emailController,
                   decoration: const InputDecoration(
-                      hintText: '600000000',
-                      prefixIcon: Icon(Icons.phone_rounded)),
-                  onChanged: (phone) => _fullPhone = phone.completeNumber,
+                    hintText: 'votre@email.com',
+                    labelText: 'Adresse email',
+                    prefixIcon: Icon(Icons.email_rounded),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.number.isEmpty)
-                      return 'Veuillez entrer votre numéro de téléphone';
-                    if ((value.countryISOCode == 'TD' ||
-                            value.countryISOCode == 'td') &&
-                        value.number.length != 9) {
-                      return 'Le numéro du Tchad doit contenir 9 chiffres';
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer votre adresse email';
+                    }
+                    final emailRegex = RegExp(
+                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                    );
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Veuillez entrer une adresse email valide';
                     }
                     return null;
                   },
