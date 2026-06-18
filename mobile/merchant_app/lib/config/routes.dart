@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 import '../screens/auth/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
+import '../screens/auth/forgot_password_screen.dart';
+import '../screens/auth/reset_password_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/products/products_screen.dart';
 import '../screens/products/add_product_screen.dart';
@@ -19,6 +21,8 @@ class AppRouter {
 
       final isGoingToAuth = state.matchedLocation.startsWith('/login') ||
           state.matchedLocation.startsWith('/register') ||
+          state.matchedLocation.startsWith('/forgot-password') ||
+          state.matchedLocation.startsWith('/reset-password') ||
           state.matchedLocation == '/splash';
 
       if (!isLoggedIn && !isGoingToAuth) {
@@ -43,6 +47,17 @@ class AppRouter {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ResetPasswordScreen(email: extra?['email'] as String?);
+        },
       ),
       GoRoute(
         path: '/dashboard',

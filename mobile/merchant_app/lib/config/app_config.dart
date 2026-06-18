@@ -1,16 +1,5 @@
 class AppConfig {
-  // API Base URL - adjust for your environment
   static String get baseUrl {
-    // Always talk to the hosted backend by default - this matters for debug
-    // builds on a real device too: 'dart.vm.product' is only true in
-    // release/profile mode, so a plain `flutter run` on a physical phone
-    // would otherwise fall through to the emulator-only 10.0.2.2 address,
-    // which a real device can never reach.
-    //
-    // To point at a backend running on your own machine instead, pass it
-    // explicitly, e.g.:
-    //   flutter run --dart-define=PRODUCTION_API_URL=http://10.0.2.2:5000   (Android emulator)
-    //   flutter run --dart-define=PRODUCTION_API_URL=http://localhost:5000  (iOS sim/desktop/web)
     const String productionUrl = String.fromEnvironment('PRODUCTION_API_URL',
         defaultValue: 'https://tumai-backend.onrender.com');
     return '$productionUrl/api';
@@ -21,9 +10,10 @@ class AppConfig {
   static String get registerEndpoint => '/auth/register';
   static String get profileEndpoint => '/auth/profile';
   static String get passwordEndpoint => '/auth/password';
+  static String get forgotPasswordEndpoint => '/auth/forgot-password';
+  static String get resetPasswordEndpoint => '/auth/reset-password';
 
   // Merchant Product Endpoints
-  // Backend routes: GET /api/products/my-products, POST /api/products, PUT/DELETE /api/products/:id
   static String get productsEndpoint => '/products/my-products';
   static String get createProductEndpoint => '/products';
   static String productEndpoint(String id) => '/products/$id';
@@ -36,13 +26,25 @@ class AppConfig {
   static String orderEndpoint(String id) => '/orders/$id';
   static String orderStatusEndpoint(String id) => '/orders/$id/status';
 
+  // Cloudinary (unsigned upload — safe to put in client code)
+  // 1. Create a free account at https://cloudinary.com
+  // 2. Copy your Cloud Name from the dashboard
+  // 3. Go to Settings → Upload → Upload presets → Add preset → Mode: Unsigned → Save
+  // 4. Paste the cloud name and preset name below
+  static const String cloudinaryCloudName = ''; // TODO: e.g. 'abc123xyz'
+  static const String cloudinaryUploadPreset = ''; // TODO: e.g. 'tumai_unsigned'
+
   // App Info
   static const String appName = 'Tumai Market - Vendeur';
   static const String appVersion = '1.0.0';
   static const String currency = 'FCFA';
-  static const String countryCode = 'TD'; // Chad
+  static const String countryCode = 'TD';
 
   // Support
   static const String supportEmail = 'support@tumaimarket.com';
   static const String supportPhone = '+235 00 00 00 00';
+
+  // Timeouts
+  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
 }

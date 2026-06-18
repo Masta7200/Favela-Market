@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
@@ -7,6 +9,7 @@ import '../../providers/product_provider.dart';
 import '../../models/product_model.dart';
 import '../../models/category_model.dart';
 import '../../widgets/custom_button.dart';
+import '../../services/cloudinary_service.dart';
 
 class AddProductScreen extends StatefulWidget {
   final String? productId;
@@ -23,11 +26,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
-  final _imageUrlController = TextEditingController();
 
   String? _selectedCategoryId;
   String? _existingImageUrl;
-  String? _previewImageUrl;
+  String? _uploadedImageUrl;
+  File? _pickedImageFile;
+  bool _isUploadingImage = false;
   bool _isLoading = false;
   ProductModel? _existingProduct;
 
@@ -37,9 +41,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   void initState() {
     super.initState();
     _loadCategories();
-    if (isEditing) {
-      _loadProduct();
-    }
+    if (isEditing) _loadProduct();
   }
 
   @override
@@ -48,7 +50,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _stockController.dispose();
-    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -68,8 +69,118 @@ class _AddProductScreenState extends State<AddProductScreen> {
         _stockController.text = _existingProduct!.stock.toString();
         _selectedCategoryId = _existingProduct!.categoryId;
         _existingImageUrl = _existingProduct!.image;
-        _imageUrlController.text = _existingProduct!.image ?? '';
       });
+    }
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppTheme.primaryColor),
+              title: const Text('Choisir depuis la galerie'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppTheme.primaryColor),
+              title: const Text('Prendre une photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            if (_uploadedImageUrl != null || _existingImageUrl != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: AppTheme.errorColor),
+                title: const Text(
+                  'Supprimer l\'image',
+                  style: TextStyle(color: AppTheme.errorColor),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _uploadedImageUrl = null;
+                    _existingImageUrl = null;
+                    _pickedImageFile = null;
+                  });
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      imageQuality: 80,
+    );
+    if (picked == null) return;
+
+    setState(() {
+      _pickedImageFile = File(picked.path);
+      _isUploadingImage = true;
+    });
+
+    try {
+      final url = await CloudinaryService.uploadImage(picked.path);
+      if (!mounted) return;
+      setState(() {
+        _uploadedImageUrl = url;
+        _pickedImageFile = null;
+        _isUploadingImage = false;
+      });
+    } on CloudinaryNotConfiguredException {
+      if (!mounted) return;
+      setState(() {
+        _pickedImageFile = null;
+        _isUploadingImage = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Le stockage d\'images n\'est pas encore configuré. Contactez l\'administrateur.',
+          ),
+          backgroundColor: AppTheme.warningColor,
+          duration: Duration(seconds: 4),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _pickedImageFile = null;
+        _isUploadingImage = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors du téléchargement: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
     }
   }
 
@@ -89,10 +200,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
     setState(() => _isLoading = true);
 
     final productProvider = context.read<ProductProvider>();
+    final imageUrl = _uploadedImageUrl ?? _existingImageUrl;
 
     bool success;
-    final imageUrl = _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim();
-    
     if (isEditing) {
       success = await productProvider.updateProduct(
         productId: widget.productId!,
@@ -124,7 +234,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           content: Text(
             isEditing
                 ? 'Produit mis à jour avec succès'
-                : 'Produit ajouté avec succès! En attente d\'approbation.',
+                : 'Produit ajouté! En attente d\'approbation.',
           ),
           backgroundColor: AppTheme.successColor,
         ),
@@ -133,9 +243,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            productProvider.error ?? 'Erreur lors de l\'enregistrement',
-          ),
+          content: Text(productProvider.error ?? 'Erreur lors de l\'enregistrement'),
           backgroundColor: AppTheme.errorColor,
         ),
       );
@@ -146,6 +254,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
     final categories = productProvider.categories;
+    final displayImageUrl = _uploadedImageUrl ?? _existingImageUrl;
 
     return Scaffold(
       appBar: AppBar(
@@ -162,96 +271,96 @@ class _AddProductScreenState extends State<AddProductScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image URL
-              _buildLabel('URL de l\'image du produit'),
-              TextFormField(
-                controller: _imageUrlController,
-                decoration: const InputDecoration(
-                  hintText: 'https://exemple.com/image.jpg',
-                  prefixIcon: Icon(Icons.link),
-                  helperText: 'Lien direct vers l\'image (optionnel)',
-                ),
-                onChanged: (value) {
-                  // Debounce image preview update
-                  Future.delayed(const Duration(milliseconds: 500), () {
-                    if (mounted && value == _imageUrlController.text) {
-                      setState(() {
-                        _previewImageUrl = value.trim().isEmpty ? null : value.trim();
-                      });
-                    }
-                  });
-                },
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    // Basic URL validation
-                    final urlPattern = r'^https?://[^\s/$.?#].[^\s]*$';
-                    final regExp = RegExp(urlPattern, caseSensitive: false);
-                    if (!regExp.hasMatch(value)) {
-                      return 'Veuillez entrer une URL valide';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              if (_previewImageUrl != null || _existingImageUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 150,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppTheme.borderColor),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            _previewImageUrl ?? _existingImageUrl ?? '',
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Colors.grey[100],
-                              child: Column(
+              // Image Picker
+              _buildLabel('Photo du produit'),
+              GestureDetector(
+                onTap: _isUploadingImage ? null : _showImagePickerOptions,
+                child: Container(
+                  height: 180,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _isUploadingImage
+                          ? AppTheme.primaryColor
+                          : AppTheme.borderColor,
+                    ),
+                  ),
+                  child: _isUploadingImage
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_pickedImageFile != null)
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(12)),
+                                  child: Image.file(
+                                    _pickedImageFile!,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            Container(
+                              color: Colors.black45,
+                              padding: const EdgeInsets.all(12),
+                              child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.broken_image,
-                                    size: 48,
-                                    color: Colors.grey[400],
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(width: 12),
                                   Text(
-                                    'Impossible de charger l\'image',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    child: Text(
-                                      '(Vérifiez l\'URL ou utilisez une image CORS-compatible)',
-                                      style: TextStyle(
-                                        color: Colors.grey[500],
-                                        fontSize: 10,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                                    'Téléchargement en cours...',
+                                    style: TextStyle(color: Colors.white),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                          ],
+                        )
+                      : displayImageUrl != null
+                          ? Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    displayImageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _buildImagePlaceholder(hasError: true),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : _buildImagePlaceholder(),
                 ),
+              ),
               const SizedBox(height: 20),
 
               // Product Name
@@ -387,7 +496,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Info Card
               if (!isEditing)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -400,10 +508,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.info_rounded,
-                        color: AppTheme.warningColor,
-                      ),
+                      const Icon(Icons.info_rounded, color: AppTheme.warningColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -419,7 +524,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 ),
               const SizedBox(height: 24),
 
-              // Save Button
               CustomButton(
                 text: isEditing ? 'Mettre à jour' : 'Ajouter le produit',
                 onPressed: _saveProduct,
@@ -429,7 +533,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Cancel Button
               CustomButton(
                 text: 'Annuler',
                 onPressed: () => context.pop(),
@@ -440,6 +543,34 @@ class _AddProductScreenState extends State<AddProductScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImagePlaceholder({bool hasError = false}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          hasError ? Icons.broken_image_outlined : Icons.add_a_photo_outlined,
+          size: 48,
+          color: hasError ? Colors.grey[400] : AppTheme.primaryColor.withOpacity(0.5),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          hasError ? 'Impossible de charger l\'image' : 'Appuyez pour ajouter une photo',
+          style: TextStyle(
+            color: hasError ? Colors.grey[500] : AppTheme.primaryColor.withOpacity(0.7),
+            fontSize: 13,
+          ),
+        ),
+        if (!hasError) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Galerie ou caméra',
+            style: TextStyle(color: Colors.grey[400], fontSize: 11),
+          ),
+        ],
+      ],
     );
   }
 

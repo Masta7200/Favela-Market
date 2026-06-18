@@ -56,14 +56,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // TODO: Implement profile update API call
+    final success = await context.read<AuthProvider>().updateProfile(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      shopName: _shopNameController.text.trim(),
+      shopDescription: _shopDescriptionController.text.trim(),
+    );
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profil mis à jour avec succès'),
-        backgroundColor: AppTheme.successColor,
+      SnackBar(
+        content: Text(success
+            ? 'Profil mis à jour avec succès'
+            : context.read<AuthProvider>().error ?? 'Erreur lors de la mise à jour'),
+        backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
       ),
     );
-    setState(() => _isEditing = false);
+    if (success) setState(() => _isEditing = false);
   }
 
   @override
@@ -598,42 +608,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
+    final dialogFormKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Changer le mot de passe'),
         content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: currentPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Mot de passe actuel',
-                  prefixIcon: Icon(Icons.lock_outline),
+          child: Form(
+            key: dialogFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: currentPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Mot de passe actuel',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Requis' : null,
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: newPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nouveau mot de passe',
-                  prefixIcon: Icon(Icons.lock),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: newPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Nouveau mot de passe',
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Requis';
+                    if (v.length < 6) return 'Minimum 6 caractères';
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirmer le mot de passe',
-                  prefixIcon: Icon(Icons.lock),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: confirmPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirmer le mot de passe',
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  validator: (v) =>
+                      v != newPasswordController.text
+                          ? 'Les mots de passe ne correspondent pas'
+                          : null,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [
@@ -642,13 +667,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Implement password change
+            onPressed: () async {
+              if (!dialogFormKey.currentState!.validate()) return;
+              final current = currentPasswordController.text;
+              final next = newPasswordController.text;
               Navigator.pop(ctx);
+              final success =
+                  await context.read<AuthProvider>().updatePassword(
+                        currentPassword: current,
+                        newPassword: next,
+                      );
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Mot de passe modifié avec succès'),
-                  backgroundColor: AppTheme.successColor,
+                SnackBar(
+                  content: Text(success
+                      ? 'Mot de passe modifié avec succès'
+                      : context.read<AuthProvider>().error ??
+                          'Mot de passe actuel incorrect'),
+                  backgroundColor:
+                      success ? AppTheme.successColor : AppTheme.errorColor,
                 ),
               );
             },

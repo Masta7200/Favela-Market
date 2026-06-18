@@ -41,7 +41,6 @@ class AuthProvider extends ChangeNotifier {
       if (response['success'] == true) {
         final userData = response['data']['user'];
 
-        // Check if user is a merchant
         if (userData['role'] != 'merchant') {
           _error = 'Accès refusé. Compte vendeur requis.';
           _isLoading = false;
@@ -99,7 +98,6 @@ class AuthProvider extends ChangeNotifier {
 
       if (response['success'] == true) {
         _merchant = MerchantModel.fromJson(response['data']['user']);
-        // Registration successful - user must login to authenticate
         _isLoading = false;
         notifyListeners();
         return true;
@@ -109,6 +107,120 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> requestPasswordReset({required String email}) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await ApiService.post(
+        AppConfig.forgotPasswordEndpoint,
+        {'email': email},
+        includeAuth: false,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await ApiService.post(
+        AppConfig.resetPasswordEndpoint,
+        {'email': email, 'otp': otp, 'newPassword': newPassword},
+        includeAuth: false,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile({
+    required String name,
+    String? email,
+    String? shopName,
+    String? shopDescription,
+  }) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final body = <String, dynamic>{'name': name};
+      if (email != null && email.isNotEmpty) body['email'] = email;
+      if (shopName != null && shopName.isNotEmpty) body['shopName'] = shopName;
+      if (shopDescription != null) body['shopDescription'] = shopDescription;
+
+      final response = await ApiService.put(AppConfig.profileEndpoint, body);
+
+      if (response['success'] == true) {
+        final userData = response['data']['user'];
+        _merchant = MerchantModel.fromJson(userData);
+        await StorageService.saveUser(userData);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _error = response['message'] ?? 'Erreur de mise à jour';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await ApiService.put(
+        AppConfig.passwordEndpoint,
+        {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
     } on ApiException catch (e) {
       _error = e.message;
       _isLoading = false;
