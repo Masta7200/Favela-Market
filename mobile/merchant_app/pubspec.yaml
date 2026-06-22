@@ -53,7 +53,11 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "lib/assets/icons/logo.jpg"
+  windows:
+    generate: true
+    image_path: "lib/assets/icons/logo.png"
+    icon_size: 48
+  image_path: "lib/assets/icons/logo.png"
 
 flutter:
   uses-material-design: true

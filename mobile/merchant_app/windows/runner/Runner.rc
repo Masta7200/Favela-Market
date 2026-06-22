@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "merchant_app" "\0"
+            VALUE "CompanyName", "Toumai Market" "\0"
+            VALUE "FileDescription", "Toumai Market - Commercant" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "merchant_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "merchant_app.exe" "\0"
-            VALUE "ProductName", "merchant_app" "\0"
+            VALUE "InternalName", "toumai_merchant" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Toumai Market. All rights reserved." "\0"
+            VALUE "OriginalFilename", "toumai_merchant.exe" "\0"
+            VALUE "ProductName", "Toumai Market - Commercant" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
