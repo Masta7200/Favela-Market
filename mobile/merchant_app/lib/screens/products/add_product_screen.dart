@@ -184,6 +184,44 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
+  void _confirmDelete(BuildContext ctx) {
+    showDialog(
+      context: ctx,
+      builder: (_) => AlertDialog(
+        title: const Text('Supprimer le produit'),
+        content: Text(
+          'Êtes-vous sûr de vouloir supprimer "${_nameController.text}"?\nCette action est irréversible.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final provider = context.read<ProductProvider>();
+              final success = await provider.deleteProduct(widget.productId!);
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(success
+                      ? 'Produit supprimé avec succès'
+                      : provider.error ?? 'Erreur lors de la suppression'),
+                  backgroundColor:
+                      success ? AppTheme.successColor : AppTheme.errorColor,
+                ),
+              );
+              if (success) context.pop();
+            },
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -263,6 +301,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          if (isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppTheme.errorColor),
+              tooltip: 'Supprimer le produit',
+              onPressed: () => _confirmDelete(context),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
