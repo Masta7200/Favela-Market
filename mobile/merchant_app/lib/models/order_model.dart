@@ -78,12 +78,12 @@ class OrderModel {
         return 'En préparation';
       case 'ready':
         return 'Prêt';
-      case 'picked':
-        return 'Récupéré';
-      case 'delivering':
+      case 'in_transit':
         return 'En livraison';
       case 'delivered':
         return 'Livré';
+      case 'completed':
+        return 'Terminé';
       case 'cancelled':
         return 'Annulé';
       case 'rejected':
@@ -114,10 +114,21 @@ class OrderItemModel {
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    // Product image: try direct field, then populated 'images' array, then 'image' field
+    final product = json['product'];
+    String? image = json['productImage'];
+    if (image == null && product is Map) {
+      final images = product['images'];
+      if (images is List && images.isNotEmpty) {
+        image = images[0] as String?;
+      }
+      image ??= product['image'] as String?;
+    }
+
     return OrderItemModel(
-      productId: json['productId'] ?? json['product']?['_id'] ?? '',
-      productName: json['productName'] ?? json['product']?['name'] ?? '',
-      productImage: json['productImage'] ?? json['product']?['image'],
+      productId: json['productId'] ?? (product is Map ? product['_id'] : null) ?? '',
+      productName: json['productName'] ?? (product is Map ? product['name'] : null) ?? '',
+      productImage: image,
       price: (json['price'] ?? 0).toDouble(),
       quantity: json['quantity'] ?? 1,
       subtotal: (json['subtotal'] ?? 0).toDouble(),

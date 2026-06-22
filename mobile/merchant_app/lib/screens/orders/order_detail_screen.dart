@@ -82,11 +82,10 @@ class _OrderDetailContent extends StatelessWidget {
         return Colors.purple;
       case 'ready':
         return Colors.teal;
-      case 'picked':
+      case 'in_transit':
         return Colors.indigo;
-      case 'delivering':
-        return Colors.deepPurple;
       case 'delivered':
+      case 'completed':
         return AppTheme.successColor;
       case 'cancelled':
       case 'rejected':
@@ -106,11 +105,10 @@ class _OrderDetailContent extends StatelessWidget {
         return Icons.restaurant;
       case 'ready':
         return Icons.inventory_2;
-      case 'picked':
-        return Icons.local_shipping;
-      case 'delivering':
+      case 'in_transit':
         return Icons.delivery_dining;
       case 'delivered':
+      case 'completed':
         return Icons.check_circle;
       case 'cancelled':
       case 'rejected':
@@ -487,13 +485,14 @@ class _OrderProgressStepper extends StatelessWidget {
         {'status': 'confirmed', 'label': 'Confirmée', 'icon': Icons.check_circle_outline},
         {'status': 'preparing', 'label': 'Préparation', 'icon': Icons.restaurant},
         {'status': 'ready', 'label': 'Prête', 'icon': Icons.inventory_2},
-        {'status': 'delivering', 'label': 'Livraison', 'icon': Icons.delivery_dining},
+        {'status': 'in_transit', 'label': 'En livraison', 'icon': Icons.delivery_dining},
         {'status': 'delivered', 'label': 'Livrée', 'icon': Icons.check_circle},
       ];
 
   int get _currentIndex {
-    final index = _steps.indexWhere((s) => s['status'] == currentStatus);
-    if (currentStatus == 'picked') return 4;
+    // completed is treated as delivered for progress display
+    final status = currentStatus == 'completed' ? 'delivered' : currentStatus;
+    final index = _steps.indexWhere((s) => s['status'] == status);
     return index >= 0 ? index : 0;
   }
 
@@ -612,7 +611,9 @@ class _StatusUpdateButtons extends StatelessWidget {
       case 'preparing':
         return 'ready';
       case 'ready':
-        return null; // Waiting for delivery pickup
+        return 'in_transit';
+      case 'in_transit':
+        return 'delivered';
       default:
         return null;
     }
@@ -626,6 +627,10 @@ class _StatusUpdateButtons extends StatelessWidget {
         return 'Commencer la préparation';
       case 'ready':
         return 'Marquer comme prête';
+      case 'in_transit':
+        return 'Envoyer en livraison';
+      case 'delivered':
+        return 'Marquer comme livrée';
       default:
         return '';
     }
@@ -634,6 +639,7 @@ class _StatusUpdateButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (order.status == 'delivered' ||
+        order.status == 'completed' ||
         order.status == 'cancelled' ||
         order.status == 'rejected') {
       return const SizedBox.shrink();
@@ -694,9 +700,6 @@ class _StatusUpdateButtons extends StatelessWidget {
             backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
           ),
         );
-        if (success) {
-          orderProvider.getOrderById(order.id);
-        }
       }
     }
   }
@@ -756,12 +759,12 @@ class _StatusUpdateButtons extends StatelessWidget {
         return 'En préparation';
       case 'ready':
         return 'Prête';
-      case 'picked':
-        return 'Récupérée';
-      case 'delivering':
+      case 'in_transit':
         return 'En livraison';
       case 'delivered':
         return 'Livrée';
+      case 'completed':
+        return 'Terminée';
       case 'cancelled':
         return 'Annulée';
       case 'rejected':

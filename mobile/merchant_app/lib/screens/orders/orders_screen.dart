@@ -46,9 +46,7 @@ class _OrdersScreenState extends State<OrdersScreen>
                 o.status == 'ready')
             .toList();
       case 'delivering':
-        return orders
-            .where((o) => o.status == 'picked' || o.status == 'delivering')
-            .toList();
+        return orders.where((o) => o.status == 'in_transit').toList();
       case 'completed':
         return orders.where((o) => o.status == 'delivered').toList();
       default:
@@ -215,11 +213,10 @@ class _OrderCard extends StatelessWidget {
         return Colors.purple;
       case 'ready':
         return Colors.teal;
-      case 'picked':
+      case 'in_transit':
         return Colors.indigo;
-      case 'delivering':
-        return Colors.deepPurple;
       case 'delivered':
+      case 'completed':
         return AppTheme.successColor;
       case 'cancelled':
       case 'rejected':
@@ -239,11 +236,10 @@ class _OrderCard extends StatelessWidget {
         return Icons.restaurant;
       case 'ready':
         return Icons.inventory_2;
-      case 'picked':
-        return Icons.local_shipping;
-      case 'delivering':
+      case 'in_transit':
         return Icons.delivery_dining;
       case 'delivered':
+      case 'completed':
         return Icons.check_circle;
       case 'cancelled':
       case 'rejected':

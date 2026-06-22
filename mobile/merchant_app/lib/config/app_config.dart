@@ -31,8 +31,8 @@ class AppConfig {
   // 2. Copy your Cloud Name from the dashboard
   // 3. Go to Settings → Upload → Upload presets → Add preset → Mode: Unsigned → Save
   // 4. Paste the cloud name and preset name below
-  static const String cloudinaryCloudName = ''; // TODO: e.g. 'abc123xyz'
-  static const String cloudinaryUploadPreset = ''; // TODO: e.g. 'tumai_unsigned'
+  static const String cloudinaryCloudName = 'dwysrvwpw';
+  static const String cloudinaryUploadPreset = 'jrz5sl0f';
 
   // App Info
   static const String appName = 'Tumai Market - Vendeur';

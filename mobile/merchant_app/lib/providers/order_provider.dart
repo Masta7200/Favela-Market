@@ -14,12 +14,10 @@ class OrderProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Get orders by status
   List<OrderModel> getOrdersByStatus(String status) {
     return _orders.where((order) => order.status == status).toList();
   }
 
-  // Fetch merchant's orders
   Future<void> fetchOrders() async {
     try {
       _isLoading = true;
@@ -29,14 +27,12 @@ class OrderProvider extends ChangeNotifier {
       final response = await ApiService.get(AppConfig.ordersEndpoint);
 
       if (response['success'] == true) {
-        // Backend returns data as a list (not wrapped in { orders })
-        final List<dynamic> data = response['data'] is List
-            ? response['data']
-            : (response['data'] is Map ? response['data']['orders'] ?? [] : []);
+        final data = response['data'];
+        final List<dynamic> list = data is List
+            ? data
+            : (data is Map ? (data['orders'] ?? data['data'] ?? []) : []);
 
-        _orders = data.map((json) => OrderModel.fromJson(json)).toList();
-
-        // Sort by date (newest first)
+        _orders = list.map((json) => OrderModel.fromJson(json)).toList();
         _orders.sort((a, b) => (b.createdAt ?? DateTime.now())
             .compareTo(a.createdAt ?? DateTime.now()));
       }
@@ -50,18 +46,20 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  // Get order by ID
   Future<OrderModel?> getOrderById(String orderId) async {
     try {
       _isLoading = true;
       Future.microtask(() => notifyListeners());
 
-      final response = await ApiService.get(
-        AppConfig.orderEndpoint(orderId),
-      );
+      final response = await ApiService.get(AppConfig.orderEndpoint(orderId));
 
       if (response['success'] == true) {
-        _currentOrder = OrderModel.fromJson(response['data']);
+        // Backend wraps the order: { data: { order: {...} } }
+        final data = response['data'];
+        final orderJson = (data is Map && data['order'] != null)
+            ? data['order']
+            : data;
+        _currentOrder = OrderModel.fromJson(orderJson);
         _isLoading = false;
         Future.microtask(() => notifyListeners());
         return _currentOrder;
@@ -77,7 +75,6 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  // Update order status
   Future<bool> updateOrderStatus(String orderId, String newStatus) async {
     try {
       _isLoading = true;
@@ -90,6 +87,20 @@ class OrderProvider extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
+        // Parse updated order from response and apply immediately
+        final data = response['data'];
+        final orderJson = (data is Map && data['order'] != null)
+            ? data['order']
+            : data;
+        if (orderJson != null) {
+          final updated = OrderModel.fromJson(orderJson);
+          // Update in the list
+          final idx = _orders.indexWhere((o) => o.id == orderId);
+          if (idx != -1) _orders[idx] = updated;
+          // Update current order if it's the same one
+          if (_currentOrder?.id == orderId) _currentOrder = updated;
+        }
+
         await fetchOrders();
         _isLoading = false;
         notifyListeners();
