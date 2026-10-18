@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # Navigation
   go_router: ^15.1.2
@@ -65,6 +67,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "lib/assets/icons/logo.png"
+  adaptive_icon_foreground_inset: 0
   windows:
     generate: true
     image_path: "lib/assets/icons/logo.png"

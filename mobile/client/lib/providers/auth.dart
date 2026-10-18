@@ -33,17 +33,18 @@ class AuthProvider extends ChangeNotifier {
 
       if (token != null && savedUser != null) {
         _user = savedUser;
-        // Don't set _isAuthenticated yet - validate token first
-        _isAuthenticated = false;
-
-        // Fetch latest user data to ensure token is still valid
-        await fetchUserProfile();
+        _isAuthenticated = true;
       } else {
         _isAuthenticated = false;
       }
 
       _isInitialized = true;
       notifyListeners();
+
+      // Refresh cached profile data without blocking app startup.
+      if (_isAuthenticated) {
+        fetchUserProfile();
+      }
     } catch (e) {
       _isAuthenticated = false;
       _isInitialized = true;
@@ -61,12 +62,12 @@ class AuthProvider extends ChangeNotifier {
         _user = savedUser;
         _isAuthenticated = true;
         notifyListeners();
-
-        // Fetch latest user data
-        await fetchUserProfile();
         return true;
       }
 
+      _user = null;
+      _isAuthenticated = false;
+      notifyListeners();
       return false;
     } catch (e) {
       return false;
