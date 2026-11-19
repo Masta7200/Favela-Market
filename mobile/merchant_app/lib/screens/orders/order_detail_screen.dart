@@ -190,6 +190,12 @@ class _OrderDetailContent extends StatelessWidget {
           _OrderProgressStepper(currentStatus: order.status),
           const SizedBox(height: 24),
 
+          // Delivery person (assigned by the admin)
+          _buildSectionTitle('Livreur'),
+          const SizedBox(height: 12),
+          _DeliveryPersonCard(order: order),
+          const SizedBox(height: 24),
+
           // Items Section
           _buildSectionTitle('Articles commandés'),
           const SizedBox(height: 12),
@@ -597,6 +603,88 @@ class _OrderProgressStepper extends StatelessWidget {
   }
 }
 
+class _DeliveryPersonCard extends StatelessWidget {
+  final OrderModel order;
+
+  const _DeliveryPersonCard({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    final person = order.deliveryPerson;
+    final String statusText;
+    final Color statusColor;
+    if (person == null) {
+      statusText = 'Un livreur sera bientôt assigné par Tumai Market.';
+      statusColor = AppTheme.textSecondaryColor;
+    } else if (order.status == 'delivered' || order.status == 'completed') {
+      statusText = 'Commande livrée';
+      statusColor = AppTheme.successColor;
+    } else if (order.pickedUpAt != null || order.status == 'in_transit') {
+      statusText = 'Commande récupérée, en route vers le client';
+      statusColor = Colors.blue;
+    } else if (order.deliveryAcceptedAt != null) {
+      statusText = 'A accepté la livraison';
+      statusColor = AppTheme.successColor;
+    } else {
+      statusText = 'En attente de son acceptation';
+      statusColor = AppTheme.warningColor;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.secondaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.delivery_dining,
+                color: AppTheme.secondaryColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (person != null) ...[
+                  Text(
+                    person.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                  if (person.phone.isNotEmpty)
+                    SelectableText(person.phone,
+                        style: TextStyle(color: Colors.grey[700])),
+                  if (person.vehicleText.isNotEmpty)
+                    Text(person.vehicleText,
+                        style:
+                            TextStyle(color: Colors.grey[600], fontSize: 13)),
+                  const SizedBox(height: 4),
+                ],
+                Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatusUpdateButtons extends StatelessWidget {
   final OrderModel order;
 
@@ -610,10 +698,11 @@ class _StatusUpdateButtons extends StatelessWidget {
         return 'preparing';
       case 'preparing':
         return 'ready';
+      // With a delivery person, pickup and delivery are confirmed in their app
       case 'ready':
-        return 'in_transit';
+        return order.hasDeliveryPerson ? null : 'in_transit';
       case 'in_transit':
-        return 'delivered';
+        return order.hasDeliveryPerson ? null : 'delivered';
       default:
         return null;
     }
@@ -653,6 +742,22 @@ class _StatusUpdateButtons extends StatelessWidget {
             gradient: AppTheme.primaryGradient,
             icon: Icons.arrow_forward,
             onPressed: () => _updateStatus(context, _nextStatus!),
+          ),
+        if (_nextStatus == null && order.hasDeliveryPerson)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              order.status == 'ready'
+                  ? 'Commande prête : ${order.deliveryPerson!.name} va la récupérer.'
+                  : '${order.deliveryPerson!.name} est en route vers le client.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
           ),
         if (order.status == 'pending') ...[
           const SizedBox(height: 12),

@@ -5,6 +5,7 @@ import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/notification_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,21 +14,51 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
+  late final NotificationProvider _notificationProvider;
 
   @override
   void initState() {
     super.initState();
+    _notificationProvider = context.read<NotificationProvider>();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _notificationProvider.stopPolling();
+    super.dispose();
+  }
+
+  // Back in the app: show what arrived meanwhile
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _notificationProvider.fetchNotifications();
+      context.read<OrderProvider>().fetchOrders();
+    }
+  }
+
   Future<void> _loadData() async {
     final productProvider = context.read<ProductProvider>();
     final orderProvider = context.read<OrderProvider>();
+    final authProvider = context.read<AuthProvider>();
+
+    // New orders, cancellations and approvals appear at the top of the app
+    _notificationProvider.startPolling(
+      onOrdersChanged: orderProvider.fetchOrders,
+      onProductsChanged: productProvider.fetchProducts,
+      onAccountChanged: authProvider.refreshProfile,
+    );
+
     await Future.wait([
+      authProvider.refreshProfile(),
       productProvider.fetchProducts(),
       orderProvider.fetchOrders(),
     ]);
@@ -152,16 +183,27 @@ class _DashboardContent extends StatelessWidget {
                 ],
               ),
             ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
+          Builder(builder: (context) {
+            final unread = context.watch<NotificationProvider>().unreadCount;
+            return IconButton(
+              icon: Badge(
+                isLabelVisible: unread > 0,
+                label: Text(unread > 99 ? '99+' : '$unread'),
+                child: const Icon(Icons.notifications_outlined),
+              ),
+              onPressed: () => context.push('/notifications'),
+            );
+          }),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await context.read<ProductProvider>().fetchProducts();
-          await context.read<OrderProvider>().fetchOrders();
+          await Future.wait([
+            context.read<AuthProvider>().refreshProfile(),
+            context.read<ProductProvider>().fetchProducts(),
+            context.read<OrderProvider>().fetchOrders(),
+            context.read<NotificationProvider>().fetchNotifications(),
+          ]);
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -1106,6 +1148,9 @@ class _ProfileTab extends StatelessWidget {
                   );
 
                   if (confirm == true) {
+                    if (context.mounted) {
+                      context.read<NotificationProvider>().clear();
+                    }
                     await authProvider.logout();
                     if (context.mounted) {
                       context.go('/login');

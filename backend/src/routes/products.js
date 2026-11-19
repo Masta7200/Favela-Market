@@ -4,14 +4,17 @@ const { protect, authorize } = require('../middlewares/auth');
 const { USER_ROLES } = require('../constants');
 const productController = require('../controllers/productController');
 
+// Merchants and delivery persons can both sell items (products still need admin approval)
+const sellers = authorize(USER_ROLES.MERCHANT, USER_ROLES.DELIVERY);
+
 // Public routes
 router.get('/', productController.getPublicProducts);
-router.get('/my-products', protect, authorize(USER_ROLES.MERCHANT), productController.getMerchantProducts);
+router.get('/my-products', protect, sellers, productController.getMerchantProducts);
 router.get('/:id', productController.getPublicProduct);
 
-// Merchant routes (requires merchant role)
-router.post('/', protect, authorize(USER_ROLES.MERCHANT), productController.createMerchantProduct);
-router.put('/:id', protect, authorize(USER_ROLES.MERCHANT), productController.updateMerchantProduct);
-router.delete('/:id', protect, authorize(USER_ROLES.MERCHANT), productController.deleteMerchantProduct);
+// Seller routes
+router.post('/', protect, sellers, productController.createMerchantProduct);
+router.put('/:id', protect, sellers, productController.updateMerchantProduct);
+router.delete('/:id', protect, sellers, productController.deleteMerchantProduct);
 
 module.exports = router;

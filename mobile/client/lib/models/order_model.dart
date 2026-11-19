@@ -13,6 +13,10 @@ class OrderModel {
   final String? notes;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  // Delivery person assigned by the admin (name + phone, to reach them)
+  final String? deliveryPersonName;
+  final String? deliveryPersonPhone;
+  final String? cancelReason;
 
   OrderModel({
     required this.id,
@@ -27,18 +31,25 @@ class OrderModel {
     this.notes,
     this.createdAt,
     this.updatedAt,
+    this.deliveryPersonName,
+    this.deliveryPersonPhone,
+    this.cancelReason,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    final deliveryPerson = json['deliveryPerson'];
+    final items = (json['items'] as List?)
+            ?.map((item) => OrderItemModel.fromJson(item))
+            .toList() ??
+        [];
+    final itemsTotal = items.fold<double>(0, (sum, i) => sum + i.subtotal);
     return OrderModel(
       id: json['_id'] ?? json['id'] ?? '',
       orderNumber: json['orderNumber'] ?? '',
       status: json['status'] ?? 'pending',
-      items: (json['items'] as List?)
-              ?.map((item) => OrderItemModel.fromJson(item))
-              .toList() ??
-          [],
-      subtotal: (json['subtotal'] ?? 0).toDouble(),
+      items: items,
+      // The backend only stores the total: fall back to the sum of the items
+      subtotal: (json['subtotal'] ?? itemsTotal).toDouble(),
       deliveryFee: (json['deliveryFee'] ?? 0).toDouble(),
       total: (json['total'] ?? 0).toDouble(),
       paymentMethod: json['paymentMethod'] ?? 'cod',
@@ -56,6 +67,11 @@ class OrderModel {
           json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt:
           json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      deliveryPersonName:
+          deliveryPerson is Map ? deliveryPerson['name']?.toString() : null,
+      deliveryPersonPhone:
+          deliveryPerson is Map ? deliveryPerson['phone']?.toString() : null,
+      cancelReason: json['cancelReason'],
     );
   }
 
@@ -86,12 +102,12 @@ class OrderModel {
         return 'En préparation';
       case 'ready':
         return 'Prêt';
-      case 'picked':
-        return 'Récupéré';
-      case 'delivering':
+      case 'in_transit':
         return 'En livraison';
       case 'delivered':
         return 'Livré';
+      case 'completed':
+        return 'Terminé';
       case 'cancelled':
         return 'Annulé';
       case 'rejected':

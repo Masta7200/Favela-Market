@@ -82,12 +82,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'delivered':
+      case 'completed':
         return AppTheme.successColor;
       case 'cancelled':
       case 'rejected':
         return AppTheme.errorColor;
-      case 'delivering':
-      case 'picked':
+      case 'in_transit':
         return AppTheme.warningColor;
       case 'confirmed':
       case 'preparing':
@@ -176,11 +176,65 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       style:
                           const TextStyle(color: AppTheme.textSecondaryColor),
                     ),
+                  if (order.cancelReason != null &&
+                      (order.status == 'cancelled' ||
+                          order.status == 'rejected')) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Motif : ${order.cancelReason}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppTheme.errorColor),
+                    ),
+                  ],
                 ],
               ),
             ),
 
             const SizedBox(height: 8),
+
+            // Delivery person (assigned by Tumai Market)
+            if (order.deliveryPersonName != null &&
+                order.status != 'cancelled' &&
+                order.status != 'rejected') ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      child: const Icon(Icons.delivery_dining,
+                          color: AppTheme.primaryColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            order.status == 'delivered' ||
+                                    order.status == 'completed'
+                                ? 'Livré par'
+                                : 'Votre livreur',
+                            style: const TextStyle(
+                                color: AppTheme.textSecondaryColor,
+                                fontSize: 13),
+                          ),
+                          Text(
+                            order.deliveryPersonName!,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 16),
+                          ),
+                          if (order.deliveryPersonPhone != null)
+                            SelectableText(order.deliveryPersonPhone!),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
 
             // Order Items
             Container(
@@ -429,14 +483,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   IconData _getStatusIcon(String status) {
     switch (status) {
       case 'delivered':
+      case 'completed':
         return Icons.check_circle;
       case 'cancelled':
       case 'rejected':
         return Icons.cancel;
-      case 'delivering':
+      case 'in_transit':
         return Icons.local_shipping;
-      case 'picked':
-        return Icons.inventory;
       case 'ready':
         return Icons.done_all;
       case 'preparing':

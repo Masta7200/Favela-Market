@@ -1,13 +1,23 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
-import { ENDPOINTS } from '../config';
+import { ENDPOINTS, ROLE_LABELS, VEHICLE_TYPES } from '../config';
 import { useToast } from './Toast';
-import { Search, Edit, Trash2, Eye, X, UserPlus, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, X, UserPlus, Check, ChevronLeft, ChevronRight, ShieldCheck, ShieldX } from 'lucide-react';
+
+const needsApproval = (user) => user.role === 'merchant' || user.role === 'delivery';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [searchParams] = useSearchParams();
+  const [filter, setFilter] = useState(searchParams.get('filter') || 'all');
+
+  // /dashboard/users?filter=pending (from a notification or the dashboard)
+  useEffect(() => {
+    const f = searchParams.get('filter');
+    if (f) setFilter(f);
+  }, [searchParams]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
@@ -41,9 +51,10 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get(ENDPOINTS.USERS, {
-        params: { role: filter !== 'all' ? filter : undefined }
-      });
+      const params = filter === 'pending'
+        ? { approval: 'pending' }
+        : { role: filter !== 'all' ? filter : undefined };
+      const response = await api.get(ENDPOINTS.USERS, { params });
       if (response.success) {
         setUsers(response.data.users);
       }
@@ -157,6 +168,31 @@ export default function UsersPage() {
     }
   };
 
+  // Same verification as the "approuvé" checkbox, in one click (the user is notified in their app)
+  const approveUser = async (user) => {
+    try {
+      await api.put(ENDPOINTS.APPROVE_USER(user._id));
+      toast.success(`${user.name} est approuvé`);
+      if (showModal) handleCloseModal();
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.message || 'Erreur lors de l\'approbation');
+    }
+  };
+
+  const rejectUser = async (user) => {
+    const reason = window.prompt(`Motif du refus pour ${user.name} (envoyé à l'utilisateur) :`, '');
+    if (reason === null) return;
+    try {
+      await api.put(ENDPOINTS.REJECT_USER(user._id), { reason: reason.trim() || undefined });
+      toast.success(`Compte de ${user.name} refusé`);
+      if (showModal) handleCloseModal();
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.message || 'Erreur lors du refus');
+    }
+  };
+
   const toggleUserStatus = async (userId, isActive) => {
     try {
       await api.put(`${ENDPOINTS.USERS}/${userId}/toggle-status`, { isActive: !isActive });
@@ -223,17 +259,19 @@ export default function UsersPage() {
               />
             </div>
           <div className="flex gap-2 flex-wrap">
-            {['all', 'client', 'merchant', 'delivery', 'admin'].map((f) => (
+            {['all', 'pending', 'client', 'merchant', 'delivery', 'admin'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-4 py-2 rounded-lg font-medium transition ${
                   filter === f
                     ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : f === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {f === 'all' ? 'Tous' : f.charAt(0).toUpperCase() + f.slice(1)}
+                {f === 'all' ? 'Tous' : f === 'pending' ? 'À vérifier' : ROLE_LABELS[f]}
               </button>
             ))}
           </div>
@@ -284,12 +322,22 @@ export default function UsersPage() {
                     <td className="px-6 py-4 text-sm text-gray-900">{user.phone}</td>
                     <td className="px-6 py-4">
                       <span className={`badge ${getRoleBadge(user.role)}`}>
-                        {user.role}
+                        {ROLE_LABELS[user.role] || user.role}
                       </span>
-                      {(user.role === 'merchant' || user.role === 'delivery') && (
+                      {needsApproval(user) && (
                         <span className={`ml-2 badge ${user.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {user.isApproved ? 'Approuvé' : 'En attente'}
+                          {user.isApproved ? 'Approuvé' : user.rejectionReason ? 'Refusé' : 'En attente'}
                         </span>
+                      )}
+                      {user.role === 'merchant' && user.shopName && (
+                        <p className="text-xs text-gray-500 mt-1">{user.shopName}</p>
+                      )}
+                      {user.role === 'delivery' && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {VEHICLE_TYPES[user.vehicleType] || 'Véhicule ?'}
+                          {user.vehicleNumber ? ` · ${user.vehicleNumber}` : ''}
+                          {user.isApproved && (user.isAvailable ? ' · En ligne' : ' · Hors ligne')}
+                        </p>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -302,6 +350,26 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end space-x-2">
+                        {needsApproval(user) && !user.isApproved && (
+                          <>
+                            <button
+                              onClick={() => approveUser(user)}
+                              className="p-2 text-white bg-green-600 hover:bg-green-700 rounded-lg transition"
+                              title="Approuver le compte"
+                            >
+                              <ShieldCheck className="w-4 h-4" />
+                            </button>
+                            {!user.rejectionReason && (
+                              <button
+                                onClick={() => rejectUser(user)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                title="Refuser le compte"
+                              >
+                                <ShieldX className="w-4 h-4" />
+                              </button>
+                            )}
+                          </>
+                        )}
                         <button
                           onClick={() => handleOpenModal('view', user)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -604,17 +672,23 @@ export default function UsersPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Numéro de plaque *
+                      Numéro de plaque {formData.vehicleType !== 'velo' && '*'}
                     </label>
                     <input
                       type="text"
                       value={formData.vehicleNumber}
                       onChange={(e) => setFormData({...formData, vehicleNumber: e.target.value})}
                       className="input"
-                      required
+                      required={formData.vehicleType !== 'velo'}
                       disabled={modalMode === 'view'}
                     />
                   </div>
+
+                  {modalMode === 'view' && selectedUser?.isApproved && (
+                    <p className="text-sm text-gray-600">
+                      Disponibilité : {selectedUser.isAvailable ? 'En ligne' : 'Hors ligne'}
+                    </p>
+                  )}
 
                   <div className="flex items-center space-x-3">
                     <input
@@ -628,6 +702,43 @@ export default function UsersPage() {
                     <label htmlFor="isApprovedDelivery" className="text-sm font-medium text-gray-700">
                       Livreur approuvé
                     </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Verification (merchant / delivery) */}
+              {modalMode === 'view' && selectedUser && needsApproval(selectedUser) && (
+                <div className="space-y-3 pt-4 border-t">
+                  <h3 className="font-semibold text-lg">Vérification du compte</h3>
+                  {selectedUser.isApproved ? (
+                    <p className="text-sm text-green-700">
+                      Compte approuvé{selectedUser.approvedAt ? ` le ${new Date(selectedUser.approvedAt).toLocaleDateString('fr-FR')}` : ''}.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-yellow-700">
+                      {selectedUser.rejectionReason
+                        ? `Refusé : ${selectedUser.rejectionReason}`
+                        : 'En attente de vérification. Vérifiez les informations ci-dessus (téléphone, ' +
+                          (selectedUser.role === 'delivery' ? 'véhicule et plaque' : 'boutique') + ') avant d\'approuver.'}
+                    </p>
+                  )}
+                  <div className="flex justify-end gap-3">
+                    {selectedUser.isApproved ? (
+                      <button type="button" onClick={() => rejectUser(selectedUser)} className="btn bg-red-100 text-red-700 hover:bg-red-200 flex items-center gap-2">
+                        <ShieldX className="w-5 h-5" /> Retirer l'approbation
+                      </button>
+                    ) : (
+                      <>
+                        {!selectedUser.rejectionReason && (
+                          <button type="button" onClick={() => rejectUser(selectedUser)} className="btn bg-red-100 text-red-700 hover:bg-red-200 flex items-center gap-2">
+                            <ShieldX className="w-5 h-5" /> Refuser
+                          </button>
+                        )}
+                        <button type="button" onClick={() => approveUser(selectedUser)} className="btn btn-primary flex items-center gap-2">
+                          <ShieldCheck className="w-5 h-5" /> Approuver
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

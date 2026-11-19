@@ -5,7 +5,7 @@ import api from '../services/api';
 import { ENDPOINTS } from '../config';
 import {
   LayoutDashboard, Users, Package, ShoppingCart, FolderTree, 
-  TrendingUp, LogOut, Menu, X, Bell, Search, User
+  TrendingUp, LogOut, Menu, X, Search, User
 } from 'lucide-react';
 
 // Import management pages (we'll create these)
@@ -14,6 +14,7 @@ import UsersPage from '../components/UsersPage';
 import ProductsPage from '../components/ProductsPage';
 import OrdersPage from '../components/OrdersPage';
 import CategoriesPage from '../components/CategoriesPage';
+import NotificationBell from '../components/NotificationBell';
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -126,10 +127,7 @@ export default function Dashboard() {
             </button>
 
             <div className="flex items-center justify-between w-full sm:justify-end sm:space-x-4">
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-                <Bell className="w-6 h-6 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+              <NotificationBell />
             </div>
           </div>
         </header>

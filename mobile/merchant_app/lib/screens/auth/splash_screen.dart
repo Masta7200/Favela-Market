@@ -41,11 +41,8 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     final token = await StorageService.getToken();
-    if (token != null) {
-      context.go('/dashboard');
-    } else {
-      context.go('/login');
-    }
+    if (!mounted) return;
+    context.go(token != null ? '/dashboard' : '/login');
   }
 
   @override

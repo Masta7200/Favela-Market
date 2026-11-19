@@ -26,12 +26,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'delivered':
+      case 'completed':
         return AppTheme.successColor;
       case 'cancelled':
       case 'rejected':
         return AppTheme.errorColor;
-      case 'delivering':
-      case 'picked':
+      case 'in_transit':
         return AppTheme.warningColor;
       case 'confirmed':
       case 'preparing':

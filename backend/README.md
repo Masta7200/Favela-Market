@@ -172,6 +172,73 @@ Content-Type: application/json
 }
 ```
 
+#### Register a merchant / delivery person
+Same endpoint. Extra fields:
+- merchant: `shopName` (required), `shopDescription`, `shopAddress`, `shopPhone`
+- delivery: `vehicleType` (`moto` | `velo` | `voiture`, required), `vehicleNumber` (required except for `velo`)
+
+Both start with `isApproved: false`; every admin gets an `account_pending` notification.
+
+#### Delivery availability (delivery, approved)
+```http
+PUT /api/auth/availability
+{ "isAvailable": true }
+```
+
+### Account verification flow
+
+```
+Merchant / delivery registers ──► admins notified ("account_pending")
+        │
+Admin: PUT /api/admin/users/:id/approve      (or the "approuvé" checkbox, PUT /api/admin/users/:id)
+       PUT /api/admin/users/:id/reject { reason }
+        │
+User notified ("account_approved" / "account_rejected" + reason)
+```
+
+Until approved, merchants and delivery persons cannot add products or work on orders (403).
+
+### Orders & delivery
+
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| POST | `/api/orders` | client | One order **per shop** is created (`data.orders`; `data.order` = first). Merchant notified (`order_new`), admins asked to assign a delivery person. |
+| GET | `/api/orders` | all | Client: own orders · merchant: own shop · delivery: assigned to them |
+| GET | `/api/orders/:id` | client, merchant, assigned delivery person, admin | |
+| PUT | `/api/orders/:id/status` | merchant | `confirmed` → `preparing` → `ready` (or `rejected`). `in_transit` / `delivered` only when no delivery person is assigned. |
+| POST | `/api/orders/:id/cancel` | client | Not once `in_transit`. Stock is restored. |
+| GET | `/api/orders/delivery/orders` | delivery | Orders assigned to me |
+| PUT | `/api/orders/:id/delivery/accept` | delivery | Merchant & client notified |
+| PUT | `/api/orders/:id/delivery/decline` | delivery | `{ reason }` — unassigns, admins notified |
+| PUT | `/api/orders/:id/delivery/status` | delivery | `{ status: "in_transit" }` after accepting and once confirmed by the merchant, then `{ status: "delivered" }` (cash orders become `paid`) |
+
+When a delivery person sells their own product, the order is automatically assigned to them (accepted, `confirmed`).
+
+### Admin
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/admin/users?approval=pending` | Merchants + delivery persons waiting for verification |
+| PUT | `/api/admin/users/:id/approve` · `/reject` | |
+| GET | `/api/admin/delivery-persons?available=true` | Approved + active, with `activeOrders` count |
+| GET | `/api/admin/orders?delivery=unassigned` | Open orders without a delivery person |
+| PUT | `/api/admin/orders/:id/assign` | `{ deliveryPersonId }` — delivery person notified (`order_assigned`) |
+| DELETE | `/api/admin/orders/:id/assign` | Remove the delivery person |
+| GET | `/api/admin/stats` | Adds `pendingDelivery`, `availableDelivery`, `unassignedOrders` |
+
+### Notifications (all roles)
+
+Stored in MongoDB (kept 60 days). The apps check every 30 s and show new ones as a banner at the top.
+
+| Method | Path |
+|---|---|
+| GET | `/api/notifications?unread=true&limit=50` → `{ notifications, unreadCount }` |
+| PUT | `/api/notifications/:id/read` |
+| PUT | `/api/notifications/read-all` |
+| DELETE | `/api/notifications/:id` |
+
+Types: `order_new`, `order_assigned`, `order_updated`, `order_cancelled`, `delivery_declined`, `account_pending`, `account_approved`, `account_rejected`, `product_approved`, `product_rejected`.
+
 ### Health Check
 ```http
 GET /health
@@ -209,14 +276,14 @@ All API responses follow this format:
 
 ## Next Steps
 
-The following features will be added:
-- [ ] Product management
-- [ ] Category management
-- [ ] Order management
-- [ ] Delivery assignment
+- [x] Product management
+- [x] Category management
+- [x] Order management
+- [x] Delivery assignment
+- [x] In-app notifications
+- [x] Image upload (Cloudinary, from the apps)
+- [ ] Push notifications when the apps are closed (Firebase Cloud Messaging — `fcmToken` is already stored)
 - [ ] Analytics
-- [ ] Notifications
-- [ ] Image upload
 
 ## Security Notes
 

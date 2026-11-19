@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../widgets/custom_button.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -719,6 +720,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (confirm == true && mounted) {
+      context.read<NotificationProvider>().clear();
       await context.read<AuthProvider>().logout();
       if (mounted) {
         context.go('/login');

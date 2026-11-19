@@ -57,10 +57,23 @@ class StorageService {
     await _prefs.remove('shop');
   }
 
+  // Notifications already shown as a banner (so they don't pop up twice)
+  static Set<String> getShownNotificationIds() {
+    return (_prefs.getStringList('shown_notifications') ?? []).toSet();
+  }
+
+  static Future<void> saveShownNotificationIds(Set<String> ids) async {
+    // Keep the most recent ones only
+    final list = ids.toList();
+    final trimmed = list.length > 200 ? list.sublist(list.length - 200) : list;
+    await _prefs.setStringList('shown_notifications', trimmed);
+  }
+
   // Clear All
   static Future<void> clearAll() async {
     await deleteToken();
     await deleteUser();
     await deleteShop();
+    await _prefs.remove('shown_notifications');
   }
 }

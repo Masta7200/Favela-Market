@@ -116,7 +116,14 @@ class OrderProvider extends ChangeNotifier {
       if (response['success'] == true) {
         final orderData = response['data']?['order'] ?? response['data'];
         final order = OrderModel.fromJson(orderData);
-        _orders.insert(0, order); // Add to beginning
+        // A cart with items from several shops creates one order per shop
+        final all = response['data']?['orders'];
+        if (all is List && all.length > 1) {
+          _orders.insertAll(
+              0, all.map((json) => OrderModel.fromJson(json)).toList());
+        } else {
+          _orders.insert(0, order); // Add to beginning
+        }
         _isLoading = false;
         notifyListeners();
         return order;

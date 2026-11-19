@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
-const { PRODUCT_STATUS, USER_ROLES } = require('../constants');
+const { PRODUCT_STATUS, USER_ROLES, NOTIFICATION_TYPES } = require('../constants');
+const { notifyUser } = require('../utils/notify');
 
 // @desc    Get all products (Admin)
 // @route   GET /api/admin/products
@@ -168,6 +169,13 @@ exports.approveProduct = async (req, res) => {
     product.rejectionReason = undefined;
     await product.save();
 
+    await notifyUser(product.merchant, {
+      title: 'Produit approuvé',
+      message: `« ${product.name} » est maintenant visible par les clients.`,
+      type: NOTIFICATION_TYPES.PRODUCT_APPROVED,
+      product: product._id
+    });
+
     res.json({ success: true, message: 'Produit approuvé', data: { product } });
   } catch (err) {
     console.error('approveProduct error', err);
@@ -191,6 +199,13 @@ exports.rejectProduct = async (req, res) => {
     product.status = PRODUCT_STATUS.REJECTED;
     product.rejectionReason = reason || 'Non conforme aux règles de la plateforme';
     await product.save();
+
+    await notifyUser(product.merchant, {
+      title: 'Produit refusé',
+      message: `« ${product.name} » a été refusé. Motif : ${product.rejectionReason}`,
+      type: NOTIFICATION_TYPES.PRODUCT_REJECTED,
+      product: product._id
+    });
 
     res.json({ success: true, message: 'Produit rejeté', data: { product } });
   } catch (err) {
@@ -247,9 +262,9 @@ exports.createMerchantProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Champs requis manquants' });
     }
 
-    // Verify merchant is approved
+    // Verify seller is approved
     if (!req.user.isApproved) {
-      return res.status(403).json({ success: false, message: 'Votre compte marchand doit être approuvé pour ajouter des produits' });
+      return res.status(403).json({ success: false, message: 'Votre compte doit être approuvé pour ajouter des produits' });
     }
 
     // Verify category exists
@@ -372,7 +387,7 @@ exports.getPublicProducts = async (req, res) => {
 
     const products = await Product.find(filter)
       .populate('category', 'name')
-      .populate('merchant', 'shopName')
+      .populate('merchant', 'shopName name')
       .sort(sortOption)
       .skip(skip)
       .limit(Number(limit));
@@ -382,7 +397,7 @@ exports.getPublicProducts = async (req, res) => {
     const mappedProducts = products.map(p => ({
       ...p.toObject(),
       categoryName: p.category?.name || 'Non catégorisé',
-      merchantName: p.merchant?.shopName || 'Inconnu'
+      merchantName: p.merchant?.shopName || p.merchant?.name || 'Inconnu'
     }));
 
     res.json({
@@ -414,7 +429,7 @@ exports.getPublicProduct = async (req, res) => {
       isActive: true
     })
       .populate('category', 'name')
-      .populate('merchant', 'shopName shopPhone');
+      .populate('merchant', 'shopName shopPhone name');
 
     if (!product) {
       return res.status(404).json({ success: false, message: 'Produit introuvable' });

@@ -7,7 +7,9 @@ import 'config/theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/order_provider.dart';
+import 'providers/notification_provider.dart';
 import 'services/storage_service.dart';
+import 'widgets/in_app_notification.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,12 +42,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp.router(
         title: 'Tumai Market - Vendeur',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
+        // Banners at the top of the app for new notifications
+        builder: (context, child) =>
+            InAppNotificationHost(child: child ?? const SizedBox.shrink()),
       ),
     );
   }

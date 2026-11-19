@@ -12,6 +12,13 @@ class AppConfig {
   static String get passwordEndpoint => '/auth/password';
   static String get forgotPasswordEndpoint => '/auth/forgot-password';
   static String get resetPasswordEndpoint => '/auth/reset-password';
+  static String get meEndpoint => '/auth/me';
+
+  // Notifications (new orders, approvals...) shown at the top of the app
+  static String get notificationsEndpoint => '/notifications';
+  static String notificationReadEndpoint(String id) => '/notifications/$id/read';
+  static String get notificationsReadAllEndpoint => '/notifications/read-all';
+  static const Duration notificationPollInterval = Duration(seconds: 30);
 
   // Merchant Product Endpoints
   static String get productsEndpoint => '/products/my-products';

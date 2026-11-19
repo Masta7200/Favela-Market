@@ -18,6 +18,12 @@ router.post('/users', adminController.createUser);
 router.put('/users/:id', adminController.updateUser);
 router.delete('/users/:id', adminController.deleteUser);
 router.put('/users/:id/toggle-status', adminController.toggleUserStatus);
+// Merchant / delivery account verification
+router.put('/users/:id/approve', adminController.approveUser);
+router.put('/users/:id/reject', adminController.rejectUser);
+
+// Delivery persons (approved + active) with their current workload
+router.get('/delivery-persons', adminController.getDeliveryPersons);
 
 // Products
 router.get('/products', productController.getProducts);
@@ -40,6 +46,8 @@ router.put('/categories/:id/toggle-status', categoryController.toggleCategorySta
 router.get('/orders', adminController.getOrders);
 router.get('/orders/:orderId', adminController.getOrderById);
 router.put('/orders/:orderId/status', adminController.updateOrderStatus);
+router.put('/orders/:orderId/assign', adminController.assignDelivery);
+router.delete('/orders/:orderId/assign', adminController.unassignDelivery);
 router.delete('/orders/:orderId', adminController.deleteOrder);
 
 module.exports = router;

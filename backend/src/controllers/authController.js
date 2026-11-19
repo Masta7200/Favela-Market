@@ -1,13 +1,43 @@
 const User = require('../models/User');
-const { USER_ROLES } = require('../constants');
+const { USER_ROLES, NOTIFICATION_TYPES } = require('../constants');
 const sendEmail = require('../utils/sendEmail');
+const { notifyAdmins } = require('../utils/notify');
+
+const VEHICLE_TYPES = ['moto', 'velo', 'voiture'];
+
+// Same user shape for register / login / me / profile, so every app parses it the same way
+const formatUser = (user) => ({
+  _id: user._id,
+  id: user._id,
+  phone: user.phone,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  isApproved: user.isApproved,
+  isActive: user.isActive,
+  rejectionReason: user.rejectionReason,
+  avatar: user.avatar,
+  addresses: user.addresses,
+  // Merchant
+  shopName: user.shopName,
+  shopDescription: user.shopDescription,
+  shopAddress: user.shopAddress,
+  shopPhone: user.shopPhone,
+  // Delivery
+  vehicleType: user.vehicleType,
+  vehicleNumber: user.vehicleNumber,
+  isAvailable: user.isAvailable,
+  createdAt: user.createdAt
+});
+exports.formatUser = formatUser;
 
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { phone, password, name, role, email } = req.body;
+    const { phone, password, name, role } = req.body;
+    const email = req.body.email ? String(req.body.email).trim().toLowerCase() : undefined;
 
     // Validate required fields
     if (!phone || !password || !name || !email) {
@@ -26,20 +56,60 @@ exports.register = async (req, res, next) => {
       });
     }
 
+    // Email is used for password reset, so it must be unique
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cet email est déjà utilisé par un autre compte'
+      });
+    }
+
     // Set default role to client if not specified or invalid
     let userRole = USER_ROLES.CLIENT;
     if (role && Object.values(USER_ROLES).includes(role) && role !== USER_ROLES.ADMIN) {
       userRole = role;
     }
 
-    // Create user
-    const user = await User.create({
-      phone,
-      password,
-      name,
-      email,
-      role: userRole
-    });
+    const userData = { phone, password, name, email, role: userRole };
+
+    // Role-specific fields
+    if (userRole === USER_ROLES.MERCHANT) {
+      if (!req.body.shopName) {
+        return res.status(400).json({ success: false, message: 'Le nom de la boutique est requis' });
+      }
+      userData.shopName = req.body.shopName;
+      userData.shopDescription = req.body.shopDescription;
+      userData.shopAddress = req.body.shopAddress;
+      userData.shopPhone = req.body.shopPhone || phone;
+    }
+
+    if (userRole === USER_ROLES.DELIVERY) {
+      const { vehicleType, vehicleNumber } = req.body;
+      if (!VEHICLE_TYPES.includes(vehicleType)) {
+        return res.status(400).json({ success: false, message: 'Type de véhicule invalide' });
+      }
+      if (vehicleType !== 'velo' && !vehicleNumber) {
+        return res.status(400).json({ success: false, message: 'Le numéro de plaque est requis' });
+      }
+      userData.vehicleType = vehicleType;
+      userData.vehicleNumber = vehicleNumber;
+      userData.isAvailable = false;
+    }
+
+    // Merchants and delivery persons always start unapproved
+    userData.isApproved = userRole === USER_ROLES.CLIENT;
+
+    const user = await User.create(userData);
+
+    if (userRole === USER_ROLES.MERCHANT || userRole === USER_ROLES.DELIVERY) {
+      const label = userRole === USER_ROLES.MERCHANT ? 'marchand' : 'livreur';
+      await notifyAdmins({
+        title: `Nouveau compte ${label} à vérifier`,
+        message: `${user.name} (${user.phone}) attend votre validation.`,
+        type: NOTIFICATION_TYPES.ACCOUNT_PENDING
+      });
+    }
 
     // Generate token
     const token = user.generateAuthToken();
@@ -49,16 +119,35 @@ exports.register = async (req, res, next) => {
       message: 'Inscription réussie',
       data: {
         token,
-        user: {
-          id: user._id,
-          phone: user.phone,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isApproved: user.isApproved,
-          isActive: user.isActive
-        }
+        user: formatUser(user)
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delivery person goes online / offline
+// @route   PUT /api/auth/availability
+// @access  Private (Delivery)
+exports.setAvailability = async (req, res, next) => {
+  try {
+    const { isAvailable } = req.body;
+
+    if (typeof isAvailable !== 'boolean') {
+      return res.status(400).json({ success: false, message: 'isAvailable doit être true ou false' });
+    }
+
+    if (isAvailable && !req.user.isApproved) {
+      return res.status(403).json({ success: false, message: 'Votre compte doit être vérifié par un administrateur' });
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, { isAvailable }, { new: true });
+
+    res.json({
+      success: true,
+      message: isAvailable ? 'Vous êtes en ligne' : 'Vous êtes hors ligne',
+      data: { user: formatUser(user) }
     });
   } catch (error) {
     next(error);
@@ -206,18 +295,7 @@ exports.login = async (req, res, next) => {
       message: 'Connexion réussie',
       data: {
         token,
-        user: {
-          id: user._id,
-          phone: user.phone,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isApproved: user.isApproved,
-          isActive: user.isActive,
-          shopName: user.shopName,
-          avatar: user.avatar,
-          addresses: user.addresses
-        }
+        user: formatUser(user)
       }
     });
   } catch (error) {
@@ -235,24 +313,7 @@ exports.getMe = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: {
-        user: {
-          id: user._id,
-          phone: user.phone,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isApproved: user.isApproved,
-          isActive: user.isActive,
-          shopName: user.shopName,
-          shopDescription: user.shopDescription,
-          shopAddress: user.shopAddress,
-          shopPhone: user.shopPhone,
-          avatar: user.avatar,
-          addresses: user.addresses,
-          vehicleType: user.vehicleType,
-          vehicleNumber: user.vehicleNumber,
-          createdAt: user.createdAt
-        }
+        user: formatUser(user)
       }
     });
   } catch (error) {
@@ -279,8 +340,19 @@ exports.updateProfile = async (req, res, next) => {
     }
 
     if (req.user.role === USER_ROLES.DELIVERY) {
+      if (req.body.vehicleType !== undefined && !VEHICLE_TYPES.includes(req.body.vehicleType)) {
+        return res.status(400).json({ success: false, message: 'Type de véhicule invalide' });
+      }
       fieldsToUpdate.vehicleType = req.body.vehicleType;
       fieldsToUpdate.vehicleNumber = req.body.vehicleNumber;
+    }
+
+    if (fieldsToUpdate.email) {
+      fieldsToUpdate.email = String(fieldsToUpdate.email).trim().toLowerCase();
+      const emailTaken = await User.findOne({ email: fieldsToUpdate.email, _id: { $ne: req.user._id } });
+      if (emailTaken) {
+        return res.status(400).json({ success: false, message: 'Cet email est déjà utilisé par un autre compte' });
+      }
     }
 
     // Remove undefined fields
@@ -297,7 +369,7 @@ exports.updateProfile = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Profil mis à jour avec succès',
-      data: { user }
+      data: { user: formatUser(user) }
     });
   } catch (error) {
     next(error);
@@ -412,40 +484,5 @@ exports.updateFCMToken = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
-  }
-};
-
-exports.requestPasswordReset = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email est requis' });
-    }
-
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
-    }
-
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    user.resetOtp = otp;
-    user.resetOtpExpiry = otpExpiry;
-    await user.save();
-
-    // Send OTP to email
-    await sendEmail(user.email, 'Réinitialiser votre mot de passe', `Votre code OTP: ${otp}`);
-
-    res.json({
-      success: true,
-      message: 'Code envoyé à votre email',
-      maskedEmail: maskEmail(user.email)
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
   }
 };

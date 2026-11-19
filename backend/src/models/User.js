@@ -62,18 +62,31 @@ const userSchema = new mongoose.Schema({
   shopPhone: {
     type: String
   },
+  // Merchants and delivery persons must be approved by an admin
   isApproved: {
     type: Boolean,
     default: false
   },
-  
+  approvedAt: {
+    type: Date
+  },
+  rejectionReason: {
+    type: String
+  },
+
   // Delivery specific fields
   vehicleType: {
     type: String,
     enum: ['moto', 'velo', 'voiture']
   },
   vehicleNumber: {
-    type: String
+    type: String,
+    trim: true
+  },
+  // Online / offline switch in the delivery app
+  isAvailable: {
+    type: Boolean,
+    default: false
   },
   
   // General fields

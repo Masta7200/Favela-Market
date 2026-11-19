@@ -229,6 +229,28 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Reloads the account from the server (e.g. after the admin approves the
+  /// shop). Returns false if the session is no longer valid.
+  Future<bool> refreshProfile() async {
+    try {
+      final response = await ApiService.get(AppConfig.meEndpoint);
+      if (response['success'] == true) {
+        final userData = Map<String, dynamic>.from(response['data']['user']);
+        _merchant = MerchantModel.fromJson(userData);
+        await StorageService.saveUser(userData);
+        notifyListeners();
+      }
+      return true;
+    } on ApiException catch (e) {
+      if (e.isUnauthorized) {
+        await logout();
+        return false;
+      }
+      // Offline: keep the cached account
+      return true;
+    }
+  }
+
   Future<void> logout() async {
     _merchant = null;
     await StorageService.clearAll();

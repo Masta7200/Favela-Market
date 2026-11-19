@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/database');
 const { notFound, errorHandler } = require('./middlewares/error');
 
@@ -24,6 +25,8 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
 // Orders routes
 app.use('/api/orders', require('./routes/orders'));
+// In-app notifications (all roles)
+app.use('/api/notifications', require('./routes/notifications'));
 
 // DEBUG: print registered routes for troubleshooting deployed routing
 // (temporary - remove after debug)
@@ -46,16 +49,6 @@ const listRoutes = () => {
 };
 // listRoutes();
 
-// Serve admin build in production
-if (process.env.NODE_ENV === 'production') {
-  const adminDist = path.join(__dirname, '..', '..', 'admin', 'dist');
-  app.use(express.static(adminDist));
-
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(adminDist, 'index.html'));
-  });
-}
-
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -64,6 +57,17 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Serve admin build in production (only when it was built next to the backend)
+const adminDist = path.join(__dirname, '..', '..', 'admin', 'dist');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(path.join(adminDist, 'index.html'))) {
+  app.use(express.static(adminDist));
+
+  // Express 5 syntax for "any path" ('*' alone throws at startup); API paths keep their 404 JSON
+  app.get(/^\/(?!api\/).*/, (req, res) => {
+    res.sendFile(path.join(adminDist, 'index.html'));
+  });
+}
 
 // Error handling
 app.use(notFound);

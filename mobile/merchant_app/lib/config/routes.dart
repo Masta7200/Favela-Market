@@ -10,6 +10,7 @@ import '../screens/products/add_product_screen.dart';
 import '../screens/orders/orders_screen.dart';
 import '../screens/orders/order_detail_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
 import '../services/storage_service.dart';
 
 class AppRouter {
@@ -92,6 +93,10 @@ class AppRouter {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
   );

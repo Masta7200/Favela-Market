@@ -10,12 +10,11 @@ export const ENDPOINTS = {
   
   // Users
   USERS: '/admin/users',
-  
-  // Merchants
-  MERCHANTS: '/admin/merchants',
-  APPROVE_MERCHANT: (id) => `/admin/merchants/${id}/approve`,
-  REJECT_MERCHANT: (id) => `/admin/merchants/${id}/reject`,
-  
+
+  // Merchant & delivery account verification
+  APPROVE_USER: (id) => `/admin/users/${id}/approve`,
+  REJECT_USER: (id) => `/admin/users/${id}/reject`,
+
   // Products
   PRODUCTS: '/admin/products',
   PRODUCT_BY_ID: (id) => `/admin/products/${id}`,
@@ -31,21 +30,37 @@ export const ENDPOINTS = {
   ORDER_BY_ID: (id) => `/admin/orders/${id}`,
   UPDATE_ORDER_STATUS: (id) => `/admin/orders/${id}/status`,
   DELETE_ORDER: (id) => `/admin/orders/${id}`,
-  
-  // Delivery Personnel
-  DELIVERY: '/admin/delivery',
+  ASSIGN_ORDER: (id) => `/admin/orders/${id}/assign`,
+
+  // Delivery Personnel (approved + active)
+  DELIVERY_PERSONS: '/admin/delivery-persons',
+
+  // Notifications (admin's own)
+  NOTIFICATIONS: '/notifications',
+  NOTIFICATION_READ: (id) => `/notifications/${id}/read`,
+  NOTIFICATIONS_READ_ALL: '/notifications/read-all',
 };
 
+// How often the admin panel checks for new notifications
+export const NOTIFICATION_POLL_MS = 30000;
+
+// Must match the backend Order status enum
 export const ORDER_STATUSES = [
   { value: 'pending', label: 'En attente', color: 'gray' },
   { value: 'confirmed', label: 'Confirmé', color: 'blue' },
   { value: 'preparing', label: 'En préparation', color: 'yellow' },
   { value: 'ready', label: 'Prêt', color: 'purple' },
-  { value: 'picked', label: 'Récupéré', color: 'indigo' },
-  { value: 'delivering', label: 'En livraison', color: 'orange' },
+  { value: 'in_transit', label: 'En livraison', color: 'orange' },
   { value: 'delivered', label: 'Livré', color: 'green' },
+  { value: 'completed', label: 'Terminé', color: 'green' },
   { value: 'cancelled', label: 'Annulé', color: 'red' },
   { value: 'rejected', label: 'Rejeté', color: 'red' },
 ];
+
+export const FINAL_ORDER_STATUSES = ['delivered', 'completed', 'cancelled', 'rejected'];
+
+export const VEHICLE_TYPES = { moto: 'Moto', velo: 'Vélo', voiture: 'Voiture' };
+
+export const ROLE_LABELS = { client: 'Client', merchant: 'Marchand', delivery: 'Livreur', admin: 'Admin' };
 
 export const CURRENCY = 'FCFA';

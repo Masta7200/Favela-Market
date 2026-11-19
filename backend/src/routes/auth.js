@@ -9,7 +9,8 @@ const {
   addAddress,
   updateFCMToken,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  setAvailability
 } = require('../controllers/authController');
 const { protect, authorize } = require('../middlewares/auth');
 const { USER_ROLES } = require('../constants');
@@ -33,5 +34,8 @@ router.post('/fcm-token', protect, updateFCMToken);
 
 // Client specific routes
 router.post('/addresses', protect, authorize(USER_ROLES.CLIENT), addAddress);
+
+// Delivery specific routes
+router.put('/availability', protect, authorize(USER_ROLES.DELIVERY), setAvailability);
 
 module.exports = router;

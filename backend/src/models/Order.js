@@ -66,6 +66,29 @@ const orderSchema = new mongoose.Schema({
   notes: {
     type: String
   },
+
+  // Delivery
+  deliveryPerson: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
+  assignedAt: {
+    type: Date
+  },
+  deliveryAcceptedAt: {
+    type: Date
+  },
+  pickedUpAt: {
+    type: Date
+  },
+  // History of delivery persons who declined this order
+  deliveryDeclines: [{
+    deliveryPerson: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    reason: String,
+    at: { type: Date, default: Date.now }
+  }],
+
   deliveredAt: {
     type: Date
   },
