@@ -44,6 +44,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         email: _email ?? '',
         otp: _otpController.text.trim(),
         newPassword: _passwordController.text.trim());
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (success) {

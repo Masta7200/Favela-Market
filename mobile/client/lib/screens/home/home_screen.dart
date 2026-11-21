@@ -7,6 +7,7 @@ import '../../config/app_config.dart';
 import '../../providers/products.dart';
 import '../../providers/cart.dart';
 import '../../providers/auth.dart';
+import '../../providers/notification_provider.dart';
 import '../../models/product_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -76,6 +77,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          _BadgeIcon(
+            icon: Icons.notifications_outlined,
+            count: context.watch<NotificationProvider>().unreadCount,
+            onPressed: () => context.push('/notifications'),
+          ),
           Stack(
             children: [
               IconButton(
@@ -116,167 +122,181 @@ class _HomeScreenState extends State<HomeScreen> {
           await productProvider.fetchProducts();
           await productProvider.fetchCategories();
         },
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Search Bar
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: Colors.white,
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher des produits...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              productProvider.fetchProducts();
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: AppTheme.backgroundColor,
+        // Loads the next page of products when nearing the bottom
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            if (n.metrics.extentAfter < 400) productProvider.loadMore();
+            return false;
+          },
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Search Bar
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.white,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Rechercher des produits...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                productProvider.fetchProducts();
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppTheme.backgroundColor,
+                    ),
+                    onSubmitted: (value) {
+                      if (value.isNotEmpty) {
+                        productProvider.searchProducts(value);
+                      }
+                    },
                   ),
-                  onSubmitted: (value) {
-                    if (value.isNotEmpty) {
-                      productProvider.searchProducts(value);
-                    }
-                  },
                 ),
-              ),
 
-              // Categories Section
-              if (productProvider.categories.isNotEmpty) ...[
+                // Categories Section
+                if (productProvider.categories.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Catégories',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/categories'),
+                          child: const Text('Voir tout'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: productProvider.categories.take(5).length,
+                      itemBuilder: (context, index) {
+                        final category = productProvider.categories[index];
+                        return GestureDetector(
+                          onTap: () {
+                            context.push(
+                              '/products?categoryId=${category.id}&categoryName=${category.name}',
+                            );
+                          },
+                          child: Container(
+                            width: 80,
+                            margin: const EdgeInsets.only(right: 12),
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    gradient: AppTheme.primaryGradient,
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: const Icon(
+                                    Icons.category,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  category.name,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+
+                // Products Section
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Catégories',
+                        'Produits populaires',
                         style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      TextButton(
-                        onPressed: () => context.push('/categories'),
-                        child: const Text('Voir tout'),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(
-                  height: 100,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: productProvider.categories.take(5).length,
-                    itemBuilder: (context, index) {
-                      final category = productProvider.categories[index];
-                      return GestureDetector(
-                        onTap: () {
-                          context.push(
-                            '/products?categoryId=${category.id}&categoryName=${category.name}',
-                          );
-                        },
-                        child: Container(
-                          width: 80,
-                          margin: const EdgeInsets.only(right: 12),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  gradient: AppTheme.primaryGradient,
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: const Icon(
-                                  Icons.category,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                category.name,
-                                style: Theme.of(context).textTheme.bodySmall,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+
+                if (productProvider.isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (productProvider.products.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.shopping_bag_outlined,
+                            size: 80,
+                            color: Colors.grey,
                           ),
-                        ),
-                      );
+                          const SizedBox(height: 16),
+                          Text(
+                            'Aucun produit disponible',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: productProvider.products.length,
+                    itemBuilder: (context, index) {
+                      final product = productProvider.products[index];
+                      return _ProductCard(product: product);
                     },
                   ),
-                ),
+
+                if (productProvider.isLoadingMore)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+
+                const SizedBox(height: 20),
               ],
-
-              // Products Section
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Produits populaires',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                  ],
-                ),
-              ),
-
-              if (productProvider.isLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else if (productProvider.products.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 80,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Aucun produit disponible',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: productProvider.products.length,
-                  itemBuilder: (context, index) {
-                    final product = productProvider.products[index];
-                    return _ProductCard(product: product);
-                  },
-                ),
-
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
         ),
       ),
@@ -312,6 +332,50 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// App bar icon with a small counter (unread notifications)
+class _BadgeIcon extends StatelessWidget {
+  final IconData icon;
+  final int count;
+  final VoidCallback onPressed;
+
+  const _BadgeIcon({
+    required this.icon,
+    required this.count,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        IconButton(icon: Icon(icon), onPressed: onPressed),
+        if (count > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppTheme.errorColor,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                count > 9 ? '9+' : '$count',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

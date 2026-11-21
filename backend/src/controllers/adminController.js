@@ -52,6 +52,44 @@ exports.getStats = async (req, res) => {
       ])
     ]);
 
+    // Last 6 months, including the current one
+    const MONTHS = 6;
+    const now = new Date();
+    const since = new Date(now.getFullYear(), now.getMonth() - (MONTHS - 1), 1);
+
+    const [monthly, recentOrders, usersByRole] = await Promise.all([
+      Order.aggregate([
+        { $match: { createdAt: { $gte: since } } },
+        {
+          $group: {
+            _id: { y: { $year: '$createdAt' }, m: { $month: '$createdAt' } },
+            orders: { $sum: 1 },
+            revenue: {
+              $sum: { $cond: [{ $in: ['$status', ['delivered', 'completed']] }, '$total', 0] }
+            }
+          }
+        }
+      ]),
+      Order.find()
+        .sort({ createdAt: -1 })
+        .limit(6)
+        .select('orderNumber status total createdAt client')
+        .populate('client', 'name'),
+      User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }])
+    ]);
+
+    const MONTH_NAMES = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const monthlyRevenue = [];
+    for (let i = 0; i < MONTHS; i++) {
+      const d = new Date(since.getFullYear(), since.getMonth() + i, 1);
+      const row = monthly.find(r => r._id.y === d.getFullYear() && r._id.m === d.getMonth() + 1);
+      monthlyRevenue.push({
+        name: MONTH_NAMES[d.getMonth()],
+        revenue: row?.revenue || 0,
+        orders: row?.orders || 0
+      });
+    }
+
     res.json({
       success: true,
       data: {
@@ -64,7 +102,17 @@ exports.getStats = async (req, res) => {
         availableDelivery,
         totalOrders,
         unassignedOrders,
-        totalRevenue: revenue[0]?.total || 0
+        totalRevenue: revenue[0]?.total || 0,
+        usersByRole: Object.fromEntries(usersByRole.map(r => [r._id, r.count])),
+        monthlyRevenue,
+        recentOrders: recentOrders.map(o => ({
+          _id: o._id,
+          orderNumber: o.orderNumber,
+          customerName: o.client?.name || 'Client',
+          status: o.status,
+          total: o.total,
+          createdAt: o.createdAt
+        }))
       }
     });
   } catch (err) {

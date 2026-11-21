@@ -7,6 +7,8 @@ export const ENDPOINTS = {
   
   // Dashboard Stats
   STATS: '/admin/stats',
+  // Public platform figures (landing page, no login)
+  PUBLIC_STATS: '/public/stats',
   
   // Users
   USERS: '/admin/users',
@@ -56,6 +58,21 @@ export const ORDER_STATUSES = [
   { value: 'cancelled', label: 'Annulé', color: 'red' },
   { value: 'rejected', label: 'Rejeté', color: 'red' },
 ];
+
+export const getOrderStatus = (value) =>
+  ORDER_STATUSES.find((s) => s.value === value) || { value, label: value, color: 'gray' };
+
+// Tailwind classes for the status colours above
+export const BADGE_CLASSES = {
+  gray: 'bg-gray-100 text-gray-700',
+  blue: 'bg-blue-100 text-blue-700',
+  yellow: 'bg-yellow-100 text-yellow-700',
+  purple: 'bg-purple-100 text-purple-700',
+  indigo: 'bg-indigo-100 text-indigo-700',
+  orange: 'bg-orange-100 text-orange-700',
+  green: 'bg-green-100 text-green-700',
+  red: 'bg-red-100 text-red-700',
+};
 
 export const FINAL_ORDER_STATUSES = ['delivered', 'completed', 'cancelled', 'rejected'];
 

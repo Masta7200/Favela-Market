@@ -13,6 +13,14 @@ class AppConfig {
   static String get ordersEndpoint => '$apiUrl/orders';
   static String get addressesEndpoint => '$authEndpoint/addresses';
 
+  // Notifications (order on its way, delivered, cancelled...) shown at the top of the app
+  static String get notificationsEndpoint => '$apiUrl/notifications';
+  static String notificationReadEndpoint(String id) =>
+      '$apiUrl/notifications/$id/read';
+  static String get notificationsReadAllEndpoint =>
+      '$apiUrl/notifications/read-all';
+  static const Duration notificationPollInterval = Duration(seconds: 30);
+
   // Timeouts
   // Note: the hosted backend is on Render's free tier, which "sleeps" after
   // inactivity. The first request after a sleep can take 30-60s to wake it

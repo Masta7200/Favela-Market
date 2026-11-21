@@ -23,10 +23,12 @@ api.interceptors.response.use(
   (response) => response.data,
         (error) => {
           // Don't auto-redirect on 401 here; let the UI decide how to handle auth errors.
-          if (error.response?.status === 401) {
-            // Clear stored auth locally so UI can react
+          // Expired / invalid session (but not a wrong password on the login form)
+          if (error.response?.status === 401 && localStorage.getItem('adminToken')) {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
+            // AuthContext listens to this and sends the admin back to the login page
+            window.dispatchEvent(new Event('auth:expired'));
           }
           return Promise.reject(error.response?.data || error.message);
         }

@@ -9,6 +9,7 @@ import { Bell, CheckCheck } from 'lucide-react';
 const targetFor = (n) => {
   if (n.type === 'account_pending') return '/dashboard/users?filter=pending';
   if (n.order) return `/dashboard/orders?order=${n.order}`;
+  if (n.type === 'product_pending') return '/dashboard/products?filter=pending';
   if (n.product) return '/dashboard/products';
   return null;
 };

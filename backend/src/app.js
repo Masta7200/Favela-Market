@@ -10,6 +10,8 @@ const { notFound, errorHandler } = require('./middlewares/error');
 connectDB();
 
 const app = express();
+// Render sits behind a proxy: use the real client IP (rate limiting, logs)
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(cors({ origin: true, allowedHeaders: ['Content-Type', 'Authorization'] }));
@@ -27,27 +29,8 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/orders', require('./routes/orders'));
 // In-app notifications (all roles)
 app.use('/api/notifications', require('./routes/notifications'));
-
-// DEBUG: print registered routes for troubleshooting deployed routing
-// (temporary - remove after debug)
-const listRoutes = () => {
-  try {
-    const routes = [];
-    app._router.stack.forEach((mw) => {
-      if (mw.route && mw.route.path) {
-        routes.push({ path: mw.route.path, methods: Object.keys(mw.route.methods) });
-      } else if (mw.name === 'router' && mw.handle && mw.handle.stack) {
-        mw.handle.stack.forEach((r) => {
-          if (r.route && r.route.path) routes.push({ path: r.route.path, methods: Object.keys(r.route.methods) });
-        });
-      }
-    });
-    console.log('Registered routes:', JSON.stringify(routes, null, 2));
-  } catch (err) {
-    console.error('listRoutes error', err);
-  }
-};
-// listRoutes();
+// Public platform figures (landing page)
+app.use('/api/public', require('./routes/public'));
 
 // Health check
 app.get('/health', (req, res) => {

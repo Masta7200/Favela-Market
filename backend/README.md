@@ -239,6 +239,23 @@ Stored in MongoDB (kept 60 days). The apps check every 30 s and show new ones as
 
 Types: `order_new`, `order_assigned`, `order_updated`, `order_cancelled`, `delivery_declined`, `account_pending`, `account_approved`, `account_rejected`, `product_approved`, `product_rejected`.
 
+### Public figures (landing page, no login)
+
+```http
+GET /api/public/stats
+→ { clients, merchants, deliveryPersons, products, categories, deliveredOrders }
+```
+
+Counts only (no revenue, no personal data), cached 5 minutes.
+`GET /api/admin/stats` also returns `monthlyRevenue` (last 6 months), `recentOrders` and `usersByRole` for the dashboard.
+
+### Security
+
+- Login and password reset are limited to 8 failed attempts per account every 15 minutes (`429` after that); reset-code emails to 5 per hour.
+- A reset code is cancelled after 5 wrong tries, and is never returned by the API (only `NODE_ENV=development` shows it, for local testing).
+- Error responses include a stack trace only with `NODE_ENV=development`.
+- Search terms are matched literally (special characters are escaped); `limit` is capped at 100.
+
 ### Health Check
 ```http
 GET /health

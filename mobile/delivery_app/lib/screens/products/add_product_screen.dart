@@ -271,7 +271,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         SnackBar(
           content: Text(
             isEditing
-                ? 'Produit mis à jour avec succès'
+                // The backend says whether the change needs a new approval
+                ? (productProvider.lastMessage ?? 'Produit mis à jour avec succès')
                 : 'Produit ajouté! En attente d\'approbation.',
           ),
           backgroundColor: AppTheme.successColor,

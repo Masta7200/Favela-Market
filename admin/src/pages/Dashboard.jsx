@@ -4,9 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { ENDPOINTS } from '../config';
 import {
-  LayoutDashboard, Users, Package, ShoppingCart, FolderTree, 
-  TrendingUp, LogOut, Menu, X, Search, User
+  LayoutDashboard, Users, Package, ShoppingCart, FolderTree,
+  LogOut, Menu, X, User
 } from 'lucide-react';
+
+const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
 
 // Import management pages (we'll create these)
 import DashboardHome from '../components/DashboardHome';
@@ -17,16 +19,38 @@ import CategoriesPage from '../components/CategoriesPage';
 import NotificationBell from '../components/NotificationBell';
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Closed by default on phones, where it covers the page
+  const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
+  const [counts, setCounts] = useState({});
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Pending work shown as badges in the menu, refreshed on each page change
+  useEffect(() => {
+    api.get(ENDPOINTS.STATS)
+      .then((res) => {
+        if (!res.success) return;
+        const s = res.data;
+        setCounts({
+          users: (s.pendingMerchants || 0) + (s.pendingDelivery || 0),
+          products: s.pendingProducts || 0,
+          orders: s.unassignedOrders || 0,
+        });
+      })
+      .catch(() => {}); // badges are optional
+  }, [location.pathname]);
+
+  // On phones the menu covers the page: close it once a page is picked
+  const closeOnMobile = () => {
+    if (!isDesktop()) setSidebarOpen(false);
+  };
+
   const menuItems = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '' },
-    { icon: Users, label: 'Utilisateurs', path: 'users' },
-    { icon: Package, label: 'Produits', path: 'products' },
-    { icon: ShoppingCart, label: 'Commandes', path: 'orders' },
+    { icon: Users, label: 'Utilisateurs', path: 'users', badge: counts.users, hint: 'compte(s) à vérifier' },
+    { icon: Package, label: 'Produits', path: 'products', badge: counts.products, hint: 'produit(s) à approuver' },
+    { icon: ShoppingCart, label: 'Commandes', path: 'orders', badge: counts.orders, hint: 'commande(s) à assigner' },
     { icon: FolderTree, label: 'Catégories', path: 'categories' },
   ];
 
@@ -70,6 +94,7 @@ export default function Dashboard() {
                   <li key={item.path}>
                     <Link
                       to={fullPath}
+                      onClick={closeOnMobile}
                       className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                         isActive
                           ? 'bg-primary-50 text-primary-600 font-medium'
@@ -77,7 +102,15 @@ export default function Dashboard() {
                       }`}
                     >
                       <Icon className="w-5 h-5" />
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge > 0 && (
+                        <span
+                          title={`${item.badge} ${item.hint}`}
+                          className="min-w-[1.5rem] px-1.5 py-0.5 rounded-full bg-yellow-400 text-yellow-900 text-xs font-bold text-center"
+                        >
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );

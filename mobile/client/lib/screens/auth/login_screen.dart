@@ -49,6 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success) {
       // Refresh orders for the authenticated client immediately after login
       await context.read<OrderProvider>().fetchOrders();
+      if (!mounted) return;
       context.go('/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

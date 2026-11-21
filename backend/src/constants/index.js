@@ -37,6 +37,7 @@ const NOTIFICATION_TYPES = {
   ACCOUNT_PENDING: 'account_pending',   // Admin: new account to verify
   ACCOUNT_APPROVED: 'account_approved',
   ACCOUNT_REJECTED: 'account_rejected',
+  PRODUCT_PENDING: 'product_pending',   // Admin: product to approve
   PRODUCT_APPROVED: 'product_approved',
   PRODUCT_REJECTED: 'product_rejected',
   GENERAL: 'general'

@@ -1,7 +1,20 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const { PRODUCT_STATUS, USER_ROLES, NOTIFICATION_TYPES } = require('../constants');
-const { notifyUser } = require('../utils/notify');
+const { notifyUser, notifyAdmins } = require('../utils/notify');
+const { containsRegex, pagination } = require('../utils/query');
+
+// Fields the admin reviews: changing one sends the product back to approval
+const REVIEWED_FIELDS = ['name', 'description', 'price', 'image', 'images', 'category'];
+
+// Tell the admins a seller's product is waiting for approval
+const notifyProductPending = (product, seller, isUpdate) =>
+  notifyAdmins({
+    title: isUpdate ? 'Produit modifié à vérifier' : 'Nouveau produit à approuver',
+    message: `${seller.shopName || seller.name} : « ${product.name} »`,
+    type: NOTIFICATION_TYPES.PRODUCT_PENDING,
+    product
+  });
 
 // @desc    Get all products (Admin)
 // @route   GET /api/admin/products
@@ -28,8 +41,8 @@ exports.getProducts = async (req, res) => {
 
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { name: containsRegex(search) },
+        { description: containsRegex(search) }
       ];
     }
 
@@ -230,8 +243,8 @@ exports.getMerchantProducts = async (req, res) => {
 
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { name: containsRegex(search) },
+        { description: containsRegex(search) }
       ];
     }
 
@@ -289,6 +302,8 @@ exports.createMerchantProduct = async (req, res) => {
       isApproved: false
     });
 
+    await notifyProductPending(product, req.user, false);
+
     res.status(201).json({ success: true, message: 'Produit créé, en attente d\'approbation', data: { product } });
   } catch (err) {
     console.error('createMerchantProduct error', err);
@@ -311,6 +326,18 @@ exports.updateMerchantProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Produit introuvable ou non autorisé' });
     }
 
+    if (updates.category && String(updates.category) !== String(product.category)) {
+      const categoryExists = await Category.findById(updates.category);
+      if (!categoryExists) {
+        return res.status(400).json({ success: false, message: 'Catégorie invalide' });
+      }
+    }
+
+    // Snapshot the reviewed fields: the apps resend every field on each edit,
+    // so only a real change (not a stock update) needs a new approval
+    const snapshot = (field) => JSON.stringify(product.get(field) ?? null);
+    const before = Object.fromEntries(REVIEWED_FIELDS.map(f => [f, snapshot(f)]));
+
     // Update allowed fields
     const allowedUpdates = ['name', 'description', 'price', 'comparePrice', 'stock', 'image', 'images', 'category', 'tags', 'specifications', 'isActive'];
     allowedUpdates.forEach(field => {
@@ -319,15 +346,23 @@ exports.updateMerchantProduct = async (req, res) => {
       }
     });
 
-    // If significant changes, may need re-approval
-    if (updates.name || updates.description || updates.price) {
+    const needsReview = REVIEWED_FIELDS.some(f => snapshot(f) !== before[f]);
+    const wasApproved = product.status === PRODUCT_STATUS.APPROVED;
+    if (needsReview) {
       product.status = PRODUCT_STATUS.PENDING;
       product.isApproved = false;
+      product.rejectionReason = undefined;
     }
 
     await product.save();
 
-    res.json({ success: true, data: { product } });
+    if (needsReview) await notifyProductPending(product, req.user, wasApproved);
+
+    res.json({
+      success: true,
+      message: needsReview ? 'Produit modifié, en attente d\'approbation' : 'Produit mis à jour',
+      data: { product }
+    });
   } catch (err) {
     console.error('updateMerchantProduct error', err);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
@@ -359,16 +394,17 @@ exports.deleteMerchantProduct = async (req, res) => {
 // @access  Public
 exports.getPublicProducts = async (req, res) => {
   try {
-    const { category, search, minPrice, maxPrice, sort, page = 1, limit = 20 } = req.query;
+    const { category, search, minPrice, maxPrice, sort } = req.query;
+    const { page, limit, skip } = pagination(req.query);
     const filter = { isApproved: true, isActive: true, status: PRODUCT_STATUS.APPROVED };
 
     if (category) filter.category = category;
 
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } }
+        { name: containsRegex(search) },
+        { description: containsRegex(search) },
+        { tags: containsRegex(search) }
       ];
     }
 
@@ -383,14 +419,12 @@ exports.getPublicProducts = async (req, res) => {
     else if (sort === 'price_desc') sortOption = { price: -1 };
     else if (sort === 'popular') sortOption = { soldCount: -1 };
 
-    const skip = (Number(page) - 1) * Number(limit);
-
     const products = await Product.find(filter)
       .populate('category', 'name')
       .populate('merchant', 'shopName name')
       .sort(sortOption)
       .skip(skip)
-      .limit(Number(limit));
+      .limit(limit);
 
     const total = await Product.countDocuments(filter);
 
@@ -405,10 +439,10 @@ exports.getPublicProducts = async (req, res) => {
       data: {
         products: mappedProducts,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page,
+          limit,
           total,
-          pages: Math.ceil(total / Number(limit))
+          pages: Math.ceil(total / limit)
         }
       }
     });
@@ -435,9 +469,8 @@ exports.getPublicProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Produit introuvable' });
     }
 
-    // Increment views
-    product.views += 1;
-    await product.save();
+    // Count the view without re-validating and re-saving the whole product
+    await Product.updateOne({ _id: product._id }, { $inc: { views: 1 } });
 
     res.json({ success: true, data: { product } });
   } catch (err) {

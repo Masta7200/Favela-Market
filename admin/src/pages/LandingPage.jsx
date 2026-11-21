@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, TrendingUp, Users, Package, BarChart3, Shield, Zap, Globe } from 'lucide-react';
+import api from '../services/api';
+import { ENDPOINTS } from '../config';
+import { ShoppingBag, Users, Package, BarChart3, Shield, Zap, Store, Truck, Bell, BadgeCheck } from 'lucide-react';
 
 export default function LandingPage() {
   const [phone, setPhone] = useState('');
@@ -10,6 +12,20 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  // Real platform figures; null while loading (the free backend can take a while to wake up)
+  const [stats, setStats] = useState(null);
+  const [statsError, setStatsError] = useState(false);
+
+  useEffect(() => {
+    api.get(ENDPOINTS.PUBLIC_STATS)
+      .then((res) => (res.success ? setStats(res.data) : setStatsError(true)))
+      .catch(() => setStatsError(true));
+  }, []);
+
+  const statValue = (key) => {
+    if (stats) return (stats[key] || 0).toLocaleString('fr-FR');
+    return statsError ? '—' : '…';
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -77,10 +93,10 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-3xl blur-3xl"></div>
             <div className="relative bg-white rounded-3xl shadow-2xl p-8">
               <div className="grid grid-cols-2 gap-4">
-                <StatCard icon={Users} label="Utilisateurs" value="1,234" color="blue" />
-                <StatCard icon={Package} label="Produits" value="856" color="green" />
-                <StatCard icon={ShoppingBag} label="Commandes" value="432" color="purple" />
-                <StatCard icon={TrendingUp} label="Revenus" value="2.4M" color="orange" />
+                <StatCard icon={Users} label="Clients" value={statValue('clients')} color="blue" />
+                <StatCard icon={Store} label="Boutiques" value={statValue('merchants')} color="green" />
+                <StatCard icon={Package} label="Produits" value={statValue('products')} color="purple" />
+                <StatCard icon={Truck} label="Commandes livrées" value={statValue('deliveredOrders')} color="orange" />
               </div>
             </div>
           </div>
@@ -110,13 +126,8 @@ export default function LandingPage() {
             />
             <FeatureCard
               icon={BarChart3}
-              title="Analytics Avancées"
-              description="Suivez les ventes, revenus et performances en temps réel"
-            />
-            <FeatureCard
-              icon={Shield}
-              title="Sécurité Renforcée"
-              description="Protection des données et contrôle d'accès avancé"
+              title="Statistiques"
+              description="Suivez les commandes et les revenus mois par mois"
             />
             <FeatureCard
               icon={ShoppingBag}
@@ -124,19 +135,24 @@ export default function LandingPage() {
               description="Suivez et gérez toutes les commandes de la plateforme"
             />
             <FeatureCard
+              icon={Bell}
+              title="Notifications"
+              description="Soyez alerté des nouveaux comptes, produits et commandes à traiter"
+            />
+            <FeatureCard
               icon={Zap}
               title="Rapide & Réactif"
-              description="Interface moderne et ultra-rapide pour une productivité maximale"
+              description="Interface moderne, utilisable aussi sur mobile"
             />
             <FeatureCard
-              icon={Globe}
-              title="Multi-Devises"
-              description="Support de plusieurs devises et langues"
+              icon={Truck}
+              title="Livraisons"
+              description="Assignez les commandes aux livreurs en ligne et suivez chaque étape"
             />
             <FeatureCard
-              icon={TrendingUp}
-              title="Rapports Détaillés"
-              description="Exportez et analysez vos données business"
+              icon={BadgeCheck}
+              title="Vérification des Comptes"
+              description="Validez les marchands et les livreurs avant qu'ils ne commencent"
             />
           </div>
         </div>
@@ -249,7 +265,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Toumaï Market. Tous droits réservés.</p>
+            <p>&copy; {new Date().getFullYear()} Toumaï Market. Tous droits réservés.</p>
           </div>
         </div>
       </footer>

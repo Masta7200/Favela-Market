@@ -23,9 +23,12 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
+  late final ProductProvider _productProvider;
+
   @override
   void initState() {
     super.initState();
+    _productProvider = context.read<ProductProvider>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.categoryId != null) {
         context
@@ -35,6 +38,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
         context.read<ProductProvider>().fetchProducts();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // The home screen shares this list: give it back all products
+    if (widget.categoryId != null) {
+      Future.microtask(() => _productProvider.fetchProducts());
+    }
+    super.dispose();
   }
 
   @override
@@ -112,22 +124,34 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       await productProvider.fetchProducts();
                     }
                   },
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: productProvider.products.length,
-                    itemBuilder: (context, index) {
-                      final product = productProvider.products[index];
-                      return _ProductCard(product: product);
+                  // Loads the next page when nearing the bottom
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (n) {
+                      if (n.metrics.extentAfter < 400) {
+                        productProvider.loadMore();
+                      }
+                      return false;
                     },
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: productProvider.products.length,
+                      itemBuilder: (context, index) {
+                        final product = productProvider.products[index];
+                        return _ProductCard(product: product);
+                      },
+                    ),
                   ),
                 ),
+      bottomNavigationBar: productProvider.isLoadingMore
+          ? const SafeArea(child: LinearProgressIndicator())
+          : null,
     );
   }
 }

@@ -1,4 +1,5 @@
 const Category = require('../models/Category');
+const { escapeRegex } = require('../utils/query');
 
 // @desc    Get all categories
 // @route   GET /api/categories
@@ -50,7 +51,7 @@ exports.createCategory = async (req, res) => {
     }
 
     // Check if category already exists
-    const exists = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    const exists = await Category.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name.trim())}$`, 'i') } });
     if (exists) {
       return res.status(400).json({ success: false, message: 'Cette catégorie existe déjà' });
     }
@@ -81,7 +82,7 @@ exports.updateCategory = async (req, res) => {
     // Check for duplicate name
     if (updates.name) {
       const exists = await Category.findOne({
-        name: { $regex: new RegExp(`^${updates.name}$`, 'i') },
+        name: { $regex: new RegExp(`^${escapeRegex(updates.name.trim())}$`, 'i') },
         _id: { $ne: id }
       });
       if (exists) {

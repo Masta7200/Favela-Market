@@ -194,8 +194,9 @@ class ProfileScreen extends StatelessWidget {
                         );
 
                         if (confirm == true && context.mounted) {
+                          final orders = context.read<OrderProvider>();
                           await context.read<AuthProvider>().logout();
-                          context.read<OrderProvider>().clearOrders();
+                          orders.clearOrders();
                           if (context.mounted) {
                             context.go('/login');
                           }

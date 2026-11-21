@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { USER_ROLES } = require('../constants');
 
@@ -100,9 +101,14 @@ const userSchema = new mongoose.Schema({
   fcmToken: {
     type: String  // For push notifications
   },
+  // Password reset code: never returned by normal queries
   otp: {
-    code: String,
-    expiresAt: Date
+    type: {
+      code: String,
+      expiresAt: Date,
+      attempts: { type: Number, default: 0 }
+    },
+    select: false
   },
   createdAt: {
     type: Date,
@@ -147,10 +153,11 @@ userSchema.methods.generateAuthToken = function() {
 
 // Generate OTP
 userSchema.methods.generateOTP = function() {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = crypto.randomInt(100000, 1000000).toString();
   this.otp = {
     code: otp,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+    attempts: 0
   };
   return otp;
 };
@@ -165,7 +172,7 @@ userSchema.methods.verifyOTP = function(candidateOTP) {
     return false;
   }
   
-  return this.otp.code === candidateOTP;
+  return this.otp.code === String(candidateOTP).trim();
 };
 
 module.exports = mongoose.model('User', userSchema);

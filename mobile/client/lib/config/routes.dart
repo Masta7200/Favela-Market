@@ -18,6 +18,7 @@ import '../screens/profile/profile_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/addresses_screen.dart';
 import '../screens/profile/add_address_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
 import '../providers/auth.dart';
 
 class AppRouter {
@@ -118,6 +119,13 @@ class AppRouter {
           final orderId = state.pathParameters['id']!;
           return OrderDetailScreen(orderId: orderId);
         },
+      ),
+
+      // Notifications
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
 
       // Profile

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
-import { ENDPOINTS, ORDER_STATUSES, FINAL_ORDER_STATUSES, CURRENCY, VEHICLE_TYPES } from '../config';
+import { ENDPOINTS, ORDER_STATUSES, FINAL_ORDER_STATUSES, CURRENCY, VEHICLE_TYPES, getOrderStatus, BADGE_CLASSES } from '../config';
 import { useToast } from './Toast';
 import { Search, Eye, Package, X, Truck, UserCheck, UserX, AlertTriangle } from 'lucide-react';
 
@@ -146,24 +146,8 @@ export default function OrdersPage() {
     );
   });
 
-  const getStatusInfo = (status) => {
-    const statusObj = ORDER_STATUSES.find(s => s.value === status);
-    return statusObj || { label: status, color: 'gray' };
-  };
-
-  const getStatusColor = (color) => {
-    const colors = {
-      gray: 'bg-gray-100 text-gray-700',
-      blue: 'bg-blue-100 text-blue-700',
-      yellow: 'bg-yellow-100 text-yellow-700',
-      purple: 'bg-purple-100 text-purple-700',
-      indigo: 'bg-indigo-100 text-indigo-700',
-      orange: 'bg-orange-100 text-orange-700',
-      green: 'bg-green-100 text-green-700',
-      red: 'bg-red-100 text-red-700',
-    };
-    return colors[color] || colors.gray;
-  };
+  const getStatusInfo = getOrderStatus;
+  const getStatusColor = (color) => BADGE_CLASSES[color] || BADGE_CLASSES.gray;
 
   const addressText = (address) => {
     if (!address) return 'N/A';

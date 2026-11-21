@@ -30,6 +30,11 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setLoading(false);
+
+    // The API client fires this when the token has expired or is invalid
+    const onExpired = () => setUser(null);
+    window.addEventListener('auth:expired', onExpired);
+    return () => window.removeEventListener('auth:expired', onExpired);
   }, []);
 
   const login = async (phone, password) => {

@@ -198,8 +198,8 @@ exports.forgotPassword = async (req, res, next) => {
       success: true,
       message: 'Un code a été envoyé à votre adresse email',
       data: {
-        // Only expose the OTP outside production, to ease local testing
-        ...(process.env.NODE_ENV !== 'production' ? { otp } : {})
+        // Only expose the OTP when developing locally (never on the hosted server)
+        ...(process.env.NODE_ENV === 'development' ? { otp } : {})
       }
     });
   } catch (error) {
@@ -218,13 +218,23 @@ exports.resetPassword = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Email, OTP et nouveau mot de passe requis' });
     }
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password +otp');
     if (!user) {
       return res.status(404).json({ success: false, message: 'Aucun compte associé à cet email' });
     }
 
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ success: false, message: 'Le mot de passe doit contenir au moins 6 caractères' });
+    }
+
     const isValid = user.verifyOTP(otp);
     if (!isValid) {
+      // After 5 wrong codes the code is cancelled: a new one must be requested
+      if (user.otp?.code) {
+        user.otp.attempts = (user.otp.attempts || 0) + 1;
+        if (user.otp.attempts >= 5) user.otp = undefined;
+        await user.save();
+      }
       return res.status(400).json({ success: false, message: 'OTP invalide ou expiré' });
     }
 

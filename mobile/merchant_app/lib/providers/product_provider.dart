@@ -15,6 +15,10 @@ class ProductProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  /// Server message of the last successful save (e.g. "en attente d'approbation")
+  String? _lastMessage;
+  String? get lastMessage => _lastMessage;
+
   // Fetch merchant's products
   Future<void> fetchProducts() async {
     try {
@@ -126,6 +130,7 @@ class ProductProvider extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
+        _lastMessage = response['message'] as String?;
         await fetchProducts();
         _isLoading = false;
         Future.microtask(() => notifyListeners());

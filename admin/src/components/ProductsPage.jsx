@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { ENDPOINTS, CURRENCY } from '../config';
 import { useToast } from './Toast';
@@ -9,7 +10,16 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState([]);
   const [merchants, setMerchants] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [searchParams] = useSearchParams();
+  // ?filter=pending opens the list of products waiting for approval
+  const [filter, setFilter] = useState(() =>
+    ['pending', 'approved', 'rejected'].includes(searchParams.get('filter')) ? searchParams.get('filter') : 'all'
+  );
+  // Also follow the link when already on this page (e.g. from the notification bell)
+  useEffect(() => {
+    const f = searchParams.get('filter');
+    if (['pending', 'approved', 'rejected'].includes(f)) setFilter(f);
+  }, [searchParams]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('create');

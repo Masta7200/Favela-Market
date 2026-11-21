@@ -13,6 +13,7 @@ const {
   setAvailability
 } = require('../controllers/authController');
 const { protect, authorize } = require('../middlewares/auth');
+const { authLimiter, resetRequestLimiter } = require('../middlewares/rateLimit');
 const { USER_ROLES } = require('../constants');
 
 // Basic test route
@@ -22,9 +23,9 @@ router.get('/', (req, res) => {
 
 // Public routes
 router.post('/register', register);
-router.post('/login', login);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/login', authLimiter, login);
+router.post('/forgot-password', resetRequestLimiter, forgotPassword);
+router.post('/reset-password', authLimiter, resetPassword);
 
 // Protected routes
 router.get('/me', protect, getMe);
