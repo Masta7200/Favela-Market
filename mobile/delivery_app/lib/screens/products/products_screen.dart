@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../config/theme.dart';
+import '../../utils/format.dart';
 import '../../providers/product_provider.dart';
 import '../../models/product_model.dart';
 
@@ -41,7 +42,8 @@ class _ProductsScreenState extends State<ProductsScreen>
     await context.read<ProductProvider>().fetchProducts();
   }
 
-  List<ProductModel> _filterProducts(List<ProductModel> products, String filter) {
+  List<ProductModel> _filterProducts(
+      List<ProductModel> products, String filter) {
     var filtered = products;
 
     // Apply search filter
@@ -56,7 +58,9 @@ class _ProductsScreenState extends State<ProductsScreen>
     // Apply status filter
     switch (filter) {
       case 'approved':
-        return filtered.where((p) => p.isApproved && p.status == 'approved').toList();
+        return filtered
+            .where((p) => p.isApproved && p.status == 'approved')
+            .toList();
       case 'pending':
         return filtered.where((p) => p.status == 'pending').toList();
       case 'rejected':
@@ -146,24 +150,25 @@ class _ProductsScreenState extends State<ProductsScreen>
                     controller: _tabController,
                     children: [
                       _ProductsGrid(
-                        products: _filterProducts(productProvider.products, 'all'),
+                        products:
+                            _filterProducts(productProvider.products, 'all'),
                         onRefresh: _loadProducts,
                       ),
                       _ProductsGrid(
-                        products:
-                            _filterProducts(productProvider.products, 'approved'),
+                        products: _filterProducts(
+                            productProvider.products, 'approved'),
                         onRefresh: _loadProducts,
                         emptyMessage: 'Aucun produit approuvé',
                       ),
                       _ProductsGrid(
-                        products:
-                            _filterProducts(productProvider.products, 'pending'),
+                        products: _filterProducts(
+                            productProvider.products, 'pending'),
                         onRefresh: _loadProducts,
                         emptyMessage: 'Aucun produit en attente',
                       ),
                       _ProductsGrid(
-                        products:
-                            _filterProducts(productProvider.products, 'rejected'),
+                        products: _filterProducts(
+                            productProvider.products, 'rejected'),
                         onRefresh: _loadProducts,
                         emptyMessage: 'Aucun produit rejeté',
                       ),
@@ -408,40 +413,51 @@ class _ProductCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${product.price.toStringAsFixed(0)} FCFA',
-                          style: const TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            formatFcfa(product.price),
+                            maxLines: 1,
+                            style: const TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Stock: ${product.stock}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: product.stock > 0
-                                    ? AppTheme.textSecondaryColor
-                                    : AppTheme.errorColor,
-                                fontWeight: product.stock > 0
-                                    ? FontWeight.normal
-                                    : FontWeight.w600,
+                            Flexible(
+                              child: Text(
+                                'Stock: ${product.stock}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: product.stock > 0
+                                      ? AppTheme.textSecondaryColor
+                                      : AppTheme.errorColor,
+                                  fontWeight: product.stock > 0
+                                      ? FontWeight.normal
+                                      : FontWeight.w600,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 4),
                             // Quick actions
                             Row(
                               children: [
                                 InkWell(
-                                  onTap: () =>
-                                      context.push('/edit-product/${product.id}'),
+                                  onTap: () => context
+                                      .push('/edit-product/${product.id}'),
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.primaryColor.withOpacity(0.1),
+                                      color: AppTheme.primaryColor
+                                          .withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: const Icon(
@@ -457,7 +473,8 @@ class _ProductCard extends StatelessWidget {
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.errorColor.withOpacity(0.1),
+                                      color:
+                                          AppTheme.errorColor.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: const Icon(
@@ -507,7 +524,8 @@ class _ProductCard extends StatelessWidget {
                     content: Text(
                       success
                           ? 'Produit supprimé avec succès'
-                          : productProvider.error ?? 'Erreur lors de la suppression',
+                          : productProvider.error ??
+                              'Erreur lors de la suppression',
                     ),
                     backgroundColor:
                         success ? AppTheme.successColor : AppTheme.errorColor,

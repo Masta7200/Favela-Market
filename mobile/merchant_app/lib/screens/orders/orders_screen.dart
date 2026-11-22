@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../config/theme.dart';
+import '../../utils/format.dart';
 import '../../providers/order_provider.dart';
 import '../../models/order_model.dart';
 
@@ -356,7 +357,7 @@ class _OrderCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${order.total.toStringAsFixed(0)} FCFA',
+                        formatFcfa(order.total),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -522,7 +523,8 @@ class _OrderCard extends StatelessWidget {
                     content: Text(
                       success
                           ? 'Commande confirmée avec succès'
-                          : orderProvider.error ?? 'Erreur lors de la confirmation',
+                          : orderProvider.error ??
+                              'Erreur lors de la confirmation',
                     ),
                     backgroundColor:
                         success ? AppTheme.successColor : AppTheme.errorColor,

@@ -59,9 +59,19 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
         // Banners at the top of every screen + notification checks while logged in
-        builder: (context, child) => InAppNotificationHost(
-          child: NotificationPoller(child: child ?? const SizedBox.shrink()),
-        ),
+        builder: (context, child) {
+          // Very large system font sizes break fixed-size cards: cap them at 120 %
+          final mediaQuery = MediaQuery.of(context);
+          return MediaQuery(
+            data: mediaQuery.copyWith(
+              textScaler: mediaQuery.textScaler.clamp(maxScaleFactor: 1.2),
+            ),
+            child: InAppNotificationHost(
+              child:
+                  NotificationPoller(child: child ?? const SizedBox.shrink()),
+            ),
+          );
+        },
         locale: const Locale('fr', 'FR'),
         supportedLocales: const [
           Locale('fr', 'FR'),

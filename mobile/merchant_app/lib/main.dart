@@ -50,8 +50,17 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
         // Banners at the top of the app for new notifications
-        builder: (context, child) =>
-            InAppNotificationHost(child: child ?? const SizedBox.shrink()),
+        builder: (context, child) {
+          // Very large system font sizes break fixed-size cards: cap them at 120 %
+          final mediaQuery = MediaQuery.of(context);
+          return MediaQuery(
+            data: mediaQuery.copyWith(
+              textScaler: mediaQuery.textScaler.clamp(maxScaleFactor: 1.2),
+            ),
+            child:
+                InAppNotificationHost(child: child ?? const SizedBox.shrink()),
+          );
+        },
       ),
     );
   }

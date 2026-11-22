@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/app_config.dart';
 import '../../config/theme.dart';
+import '../../utils/format.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/order_provider.dart';
@@ -19,6 +20,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen>
     with WidgetsBindingObserver {
   int _currentIndex = 0;
+
+  void _selectTab(int index) => setState(() => _currentIndex = index);
   late final NotificationProvider _notificationProvider;
 
   @override
@@ -87,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard),
-            label: 'Tableau de bord',
+            label: 'Accueil',
           ),
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
@@ -265,11 +268,11 @@ class _DashboardContent extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 1.5,
+                childAspectRatio: 1.35,
                 children: [
                   _StatCard(
                     title: 'Revenus',
-                    value: '${totalRevenue.toStringAsFixed(0)} FCFA',
+                    value: formatFcfa(totalRevenue),
                     icon: Icons.account_balance_wallet,
                     color: AppTheme.successColor,
                     gradient: AppTheme.primaryGradient,
@@ -325,9 +328,9 @@ class _DashboardContent extends StatelessWidget {
                       label: 'Commandes\nen attente',
                       color: AppTheme.secondaryColor,
                       badge: pendingOrders > 0 ? '$pendingOrders' : null,
-                      onTap: () {
-                        // Navigate to orders tab
-                      },
+                      onTap: () => context
+                          .findAncestorStateOfType<_DashboardScreenState>()
+                          ?._selectTab(2),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -487,37 +490,48 @@ class _StatCard extends StatelessWidget {
                 size: 24,
               ),
               if (subtitle != null)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: gradient != null
-                        ? Colors.white.withOpacity(0.2)
-                        : color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    subtitle!,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: gradient != null ? Colors.white : color,
+                Flexible(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: gradient != null
+                          ? Colors.white.withOpacity(0.2)
+                          : color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: gradient != null ? Colors.white : color,
+                      ),
                     ),
                   ),
                 ),
             ],
           ),
           const Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color:
-                  gradient != null ? Colors.white : AppTheme.textPrimaryColor,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color:
+                    gradient != null ? Colors.white : AppTheme.textPrimaryColor,
+              ),
             ),
           ),
           Text(
             title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 13,
               color: gradient != null
@@ -552,7 +566,7 @@ class _QuickActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -593,12 +607,16 @@ class _QuickActionCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -664,7 +682,7 @@ class _OrderListItem extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          '${order.itemCount} article${order.itemCount > 1 ? 's' : ''} • ${order.total.toStringAsFixed(0)} FCFA',
+          '${order.itemCount} article${order.itemCount > 1 ? 's' : ''} • ${formatFcfa(order.total)}',
           style: const TextStyle(fontSize: 13),
         ),
         trailing: Container(
@@ -839,6 +857,7 @@ class _ProductGridItem extends StatelessWidget {
             // Image
             Expanded(
               child: Stack(
+                fit: StackFit.expand,
                 children: [
                   Container(
                     decoration: BoxDecoration(
@@ -916,26 +935,29 @@ class _ProductGridItem extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${product.price.toStringAsFixed(0)} FCFA',
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      formatFcfa(product.price),
+                      maxLines: 1,
+                      style: const TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(
-                        'Stock: ${product.stock}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: product.stock > 0
-                              ? Colors.grey[600]
-                              : AppTheme.errorColor,
-                        ),
-                      ),
-                    ],
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Stock : ${product.stock}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: product.stock > 0
+                          ? Colors.grey[600]
+                          : AppTheme.errorColor,
+                    ),
                   ),
                 ],
               ),

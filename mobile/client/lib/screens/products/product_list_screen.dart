@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../config/theme.dart';
-import '../../config/app_config.dart';
+import '../../utils/format.dart';
 import '../../providers/products.dart';
 import '../../providers/cart.dart';
 import '../../models/product_model.dart';
@@ -137,7 +137,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.75,
+                        childAspectRatio: 0.68,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
@@ -186,6 +186,7 @@ class _ProductCard extends StatelessWidget {
                         imageUrl: product.image!,
                         fit: BoxFit.cover,
                         width: double.infinity,
+                        height: double.infinity,
                       )
                     : const Center(
                         child: Icon(Icons.shopping_bag,
@@ -205,12 +206,17 @@ class _ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${product.price.toStringAsFixed(0)} ${AppConfig.currency}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      formatFcfa(product.price),
+                      maxLines: 1,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   SizedBox(

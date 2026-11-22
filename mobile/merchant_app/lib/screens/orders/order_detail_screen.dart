@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../config/theme.dart';
+import '../../utils/format.dart';
 import '../../providers/order_provider.dart';
 import '../../models/order_model.dart';
 import '../../widgets/custom_button.dart';
@@ -395,7 +396,7 @@ class _OrderDetailContent extends StatelessWidget {
           ),
         ),
         Text(
-          '${amount.toStringAsFixed(0)} FCFA',
+          formatFcfa(amount),
           style: TextStyle(
             fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
             fontSize: isTotal ? 18 : 14,
@@ -459,7 +460,7 @@ class _OrderItemTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${item.price.toStringAsFixed(0)} FCFA x ${item.quantity}',
+                  '${formatFcfa(item.price)} x ${item.quantity}',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 13,
@@ -469,7 +470,7 @@ class _OrderItemTile extends StatelessWidget {
             ),
           ),
           Text(
-            '${item.subtotal.toStringAsFixed(0)} FCFA',
+            formatFcfa(item.subtotal),
             style: const TextStyle(
               fontWeight: FontWeight.w600,
               color: AppTheme.primaryColor,
@@ -487,11 +488,27 @@ class _OrderProgressStepper extends StatelessWidget {
   const _OrderProgressStepper({required this.currentStatus});
 
   List<Map<String, dynamic>> get _steps => [
-        {'status': 'pending', 'label': 'En attente', 'icon': Icons.hourglass_empty},
-        {'status': 'confirmed', 'label': 'Confirmée', 'icon': Icons.check_circle_outline},
-        {'status': 'preparing', 'label': 'Préparation', 'icon': Icons.restaurant},
+        {
+          'status': 'pending',
+          'label': 'En attente',
+          'icon': Icons.hourglass_empty
+        },
+        {
+          'status': 'confirmed',
+          'label': 'Confirmée',
+          'icon': Icons.check_circle_outline
+        },
+        {
+          'status': 'preparing',
+          'label': 'Préparation',
+          'icon': Icons.restaurant
+        },
         {'status': 'ready', 'label': 'Prête', 'icon': Icons.inventory_2},
-        {'status': 'in_transit', 'label': 'En livraison', 'icon': Icons.delivery_dining},
+        {
+          'status': 'in_transit',
+          'label': 'En livraison',
+          'icon': Icons.delivery_dining
+        },
         {'status': 'delivered', 'label': 'Livrée', 'icon': Icons.check_circle},
       ];
 
@@ -587,7 +604,8 @@ class _OrderProgressStepper extends StatelessWidget {
                   child: Text(
                     step['label'] as String,
                     style: TextStyle(
-                      fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight:
+                          isCurrent ? FontWeight.w600 : FontWeight.normal,
                       color: isCompleted
                           ? AppTheme.textPrimaryColor
                           : Colors.grey[500],
@@ -777,7 +795,8 @@ class _StatusUpdateButtons extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Mettre à jour le statut'),
-        content: Text('Changer le statut vers "${_getStatusLabel(newStatus)}"?'),
+        content:
+            Text('Changer le statut vers "${_getStatusLabel(newStatus)}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -793,7 +812,8 @@ class _StatusUpdateButtons extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       final orderProvider = context.read<OrderProvider>();
-      final success = await orderProvider.updateOrderStatus(order.id, newStatus);
+      final success =
+          await orderProvider.updateOrderStatus(order.id, newStatus);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -802,7 +822,8 @@ class _StatusUpdateButtons extends StatelessWidget {
                   ? 'Statut mis à jour avec succès'
                   : orderProvider.error ?? 'Erreur lors de la mise à jour',
             ),
-            backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+            backgroundColor:
+                success ? AppTheme.successColor : AppTheme.errorColor,
           ),
         );
       }
@@ -835,7 +856,8 @@ class _StatusUpdateButtons extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       final orderProvider = context.read<OrderProvider>();
-      final success = await orderProvider.updateOrderStatus(order.id, 'rejected');
+      final success =
+          await orderProvider.updateOrderStatus(order.id, 'rejected');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -844,7 +866,8 @@ class _StatusUpdateButtons extends StatelessWidget {
                   ? 'Commande rejetée'
                   : orderProvider.error ?? 'Erreur lors du rejet',
             ),
-            backgroundColor: success ? AppTheme.warningColor : AppTheme.errorColor,
+            backgroundColor:
+                success ? AppTheme.warningColor : AppTheme.errorColor,
           ),
         );
         if (success) {

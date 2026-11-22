@@ -269,7 +269,7 @@ class _HomeTab extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 1.5,
+                childAspectRatio: 1.35,
                 children: [
                   _StatCard(
                     title: 'Nouvelles',
