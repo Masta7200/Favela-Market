@@ -239,25 +239,28 @@ class _ProductsGrid extends StatelessWidget {
       onRefresh: onRefresh,
       child: GridView.builder(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
+        gridDelegate: productGridDelegate,
         itemCount: products.length,
         itemBuilder: (context, index) {
-          return _ProductCard(product: products[index]);
+          return ProductCard(product: products[index]);
         },
       ),
     );
   }
 }
 
-class _ProductCard extends StatelessWidget {
+/// Two columns; the card's text takes the height it needs, the photo the rest.
+const productGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+  crossAxisCount: 2,
+  childAspectRatio: 0.62,
+  crossAxisSpacing: 12,
+  mainAxisSpacing: 12,
+);
+
+class ProductCard extends StatelessWidget {
   final ProductModel product;
 
-  const _ProductCard({required this.product});
+  const ProductCard({super.key, required this.product});
 
   Color _getStatusColor() {
     switch (product.status) {
@@ -300,7 +303,6 @@ class _ProductCard extends StatelessWidget {
           children: [
             // Image
             Expanded(
-              flex: 3,
               child: Stack(
                 children: [
                   Container(
@@ -393,105 +395,102 @@ class _ProductCard extends StatelessWidget {
               ),
             ),
             // Info
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      product.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            formatFcfa(product.price),
-                            maxLines: 1,
-                            style: const TextStyle(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          formatFcfa(product.price),
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                'Stock: ${product.stock}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: product.stock > 0
-                                      ? AppTheme.textSecondaryColor
-                                      : AppTheme.errorColor,
-                                  fontWeight: product.stock > 0
-                                      ? FontWeight.normal
-                                      : FontWeight.w600,
-                                ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Stock: ${product.stock}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: product.stock > 0
+                                    ? AppTheme.textSecondaryColor
+                                    : AppTheme.errorColor,
+                                fontWeight: product.stock > 0
+                                    ? FontWeight.normal
+                                    : FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            // Quick actions
-                            Row(
-                              children: [
-                                InkWell(
-                                  onTap: () => context
-                                      .push('/edit-product/${product.id}'),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.primaryColor
-                                          .withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit,
-                                      size: 16,
-                                      color: AppTheme.primaryColor,
-                                    ),
+                          ),
+                          const SizedBox(width: 4),
+                          // Quick actions
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () =>
+                                    context.push('/edit-product/${product.id}'),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        AppTheme.primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    size: 16,
+                                    color: AppTheme.primaryColor,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                InkWell(
-                                  onTap: () => _showDeleteDialog(context),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          AppTheme.errorColor.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Icon(
-                                      Icons.delete,
-                                      size: 16,
-                                      color: AppTheme.errorColor,
-                                    ),
+                              ),
+                              const SizedBox(width: 4),
+                              InkWell(
+                                onTap: () => _showDeleteDialog(context),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.errorColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    size: 16,
+                                    color: AppTheme.errorColor,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
