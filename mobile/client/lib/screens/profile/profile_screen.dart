@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../config/app_config.dart';
 import '../../config/theme.dart';
 import '../../providers/auth.dart';
 import '../../providers/order_provider.dart';
+import '../../widgets/support_sheet.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -129,14 +131,7 @@ class ProfileScreen extends StatelessWidget {
                         _MenuItem(
                           icon: Icons.help,
                           title: 'Aide & Support',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Contactez-nous au +235 60646072'),
-                              ),
-                            );
-                          },
+                          onTap: () => showSupportSheet(context),
                         ),
                         const Divider(height: 1),
                         _MenuItem(
@@ -145,8 +140,8 @@ class ProfileScreen extends StatelessWidget {
                           onTap: () {
                             showAboutDialog(
                               context: context,
-                              applicationName: 'Tumai Market',
-                              applicationVersion: '1.0.0',
+                              applicationName: AppConfig.appName,
+                              applicationVersion: AppConfig.appVersion,
                               children: [
                                 const Text(
                                   'Votre marketplace de confiance pour tous vos achats.',

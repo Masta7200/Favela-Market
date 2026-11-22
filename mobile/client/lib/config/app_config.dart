@@ -45,6 +45,6 @@ class AppConfig {
   static const String phonePrefix = '+235';
 
   // Support
-  static const String supportPhone = '+235600000000';
-  static const String supportEmail = 'support@tumaimarket.cm';
+  static const String supportPhone = '+235 60 64 60 72';
+  static const String supportEmail = 'support@tumaimarket.com';
 }

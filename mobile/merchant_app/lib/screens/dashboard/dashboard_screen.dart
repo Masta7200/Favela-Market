@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../config/app_config.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../widgets/support_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -1108,14 +1110,28 @@ class _ProfileTab extends StatelessWidget {
             _ProfileMenuItem(
               icon: Icons.help_outline,
               title: 'Aide & Support',
-              subtitle: 'Centre d\'aide et FAQ',
-              onTap: () {},
+              subtitle: 'Contact et questions fréquentes',
+              onTap: () => showSupportSheet(context),
             ),
             _ProfileMenuItem(
               icon: Icons.info_outline,
               title: 'À propos',
-              subtitle: 'Version 1.0.0',
-              onTap: () {},
+              subtitle: 'Version ${AppConfig.appVersion}',
+              onTap: () => showAboutDialog(
+                context: context,
+                applicationName: AppConfig.appName,
+                applicationVersion: AppConfig.appVersion,
+                applicationIcon: const Icon(
+                  Icons.storefront,
+                  size: 40,
+                  color: AppTheme.primaryColor,
+                ),
+                children: const [
+                  Text(
+                    'Vendez vos produits sur Tumai Market : gérez votre boutique, vos produits et vos commandes, livrées par nos livreurs.',
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
 

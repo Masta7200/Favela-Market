@@ -257,7 +257,7 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold mb-4">Contact</h3>
               <ul className="space-y-2 text-gray-400">
-                <li>Email: contact@toumaimarket.cm</li>
+                <li>Email: contact@tumaimarket.com</li>
                 <li>Tél: +235 99507200</li>
                 <li>N'Djamena, Tchad</li>
               </ul>

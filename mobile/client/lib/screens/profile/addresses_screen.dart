@@ -2,10 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
+import '../../models/usermodel.dart';
 import '../../providers/auth.dart';
 
 class AddressesScreen extends StatelessWidget {
   const AddressesScreen({super.key});
+
+  static void _showResult(
+    ScaffoldMessengerState messenger,
+    AuthProvider auth,
+    bool success,
+    String message,
+  ) {
+    messenger.showSnackBar(
+      SnackBar(
+        content:
+            Text(success ? message : (auth.error ?? 'Une erreur est survenue')),
+        backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+      ),
+    );
+  }
+
+  Future<void> _setDefault(BuildContext context, AddressModel address) async {
+    if (address.id == null) return;
+    final auth = context.read<AuthProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final success = await auth.setDefaultAddress(address.id!);
+    _showResult(messenger, auth, success, 'Adresse par défaut mise à jour');
+  }
+
+  Future<void> _confirmDelete(
+      BuildContext context, AddressModel address) async {
+    if (address.id == null) return;
+    final auth = context.read<AuthProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Supprimer l'adresse"),
+        content: Text(
+            'Supprimer « ${address.label.isEmpty ? address.fullAddress : address.label} » ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.errorColor),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final success = await auth.deleteAddress(address.id!);
+    _showResult(messenger, auth, success, 'Adresse supprimée');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +156,12 @@ class AddressesScreen extends StatelessWidget {
                       children: [
                         const SizedBox(height: 4),
                         Text(address.fullAddress),
-                        Text('${address.quarter}, ${address.city}'),
+                        Text([
+                          if (address.quarter != null &&
+                              address.quarter!.isNotEmpty)
+                            address.quarter!,
+                          address.city,
+                        ].join(', ')),
                         if (address.details != null &&
                             address.details!.isNotEmpty)
                           Text(
@@ -150,26 +210,11 @@ class AddressesScreen extends StatelessWidget {
                       ],
                       onSelected: (value) {
                         if (value == 'default') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('Fonctionnalité bientôt disponible'),
-                            ),
-                          );
+                          _setDefault(context, address);
                         } else if (value == 'edit') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('Fonctionnalité bientôt disponible'),
-                            ),
-                          );
+                          context.push('/edit-address', extra: address);
                         } else if (value == 'delete') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('Fonctionnalité bientôt disponible'),
-                            ),
-                          );
+                          _confirmDelete(context, address);
                         }
                       },
                     ),

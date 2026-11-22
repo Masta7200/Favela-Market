@@ -342,15 +342,45 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Add address
-  Future<bool> addAddress(AddressModel address) async {
+  Future<bool> addAddress(AddressModel address) => _saveAddresses(
+        () => _apiService.post(AppConfig.addressesEndpoint, address.toJson()),
+        'Erreur lors de l\'ajout de l\'adresse',
+      );
+
+  // Update an address (all fields)
+  Future<bool> updateAddress(AddressModel address) => _saveAddresses(
+        () => _apiService.put(
+          '${AppConfig.addressesEndpoint}/${address.id}',
+          address.toJson()..remove('_id'),
+        ),
+        'Erreur lors de la modification de l\'adresse',
+      );
+
+  // Make an address the default one
+  Future<bool> setDefaultAddress(String addressId) => _saveAddresses(
+        () => _apiService.put(
+          '${AppConfig.addressesEndpoint}/$addressId',
+          {'isDefault': true},
+        ),
+        'Erreur lors de la mise à jour de l\'adresse',
+      );
+
+  // Delete an address
+  Future<bool> deleteAddress(String addressId) => _saveAddresses(
+        () => _apiService.delete('${AppConfig.addressesEndpoint}/$addressId'),
+        'Erreur lors de la suppression de l\'adresse',
+      );
+
+  // Runs an address request; the server answers with the full updated list
+  Future<bool> _saveAddresses(
+    Future<Map<String, dynamic>> Function() request,
+    String fallbackError,
+  ) async {
     try {
       _setLoading(true);
       _error = null;
 
-      final response = await _apiService.post(
-        AppConfig.addressesEndpoint,
-        address.toJson(),
-      );
+      final response = await request();
 
       if (response['success'] == true) {
         // Update local user with new addresses
@@ -367,7 +397,7 @@ class AuthProvider extends ChangeNotifier {
         return true;
       }
 
-      _error = response['message'] ?? 'Erreur lors de l\'ajout de l\'adresse';
+      _error = response['message'] ?? fallbackError;
       _setLoading(false);
       return false;
     } on ApiException catch (e) {

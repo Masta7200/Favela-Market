@@ -9,6 +9,7 @@ import '../../providers/notification_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/support_sheet.dart';
 
 class ProfileScreen extends StatefulWidget {
   /// True when shown as a tab of the dashboard (no back button).
@@ -264,8 +265,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     value: _vehicleType,
                     decoration: const InputDecoration(
                       labelText: 'Type de véhicule',
-                      prefixIcon: Icon(Icons.two_wheeler,
-                          color: AppTheme.primaryColor),
+                      prefixIcon:
+                          Icon(Icons.two_wheeler, color: AppTheme.primaryColor),
                     ),
                     items: DeliveryUserModel.vehicleTypes.entries
                         .map((e) => DropdownMenuItem(
@@ -343,8 +344,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 12),
                 _buildMenuButton(
                   icon: Icons.support_agent,
-                  label: 'Support: ${AppConfig.supportEmail}',
-                  onTap: () {},
+                  label: 'Aide & Support',
+                  onTap: () => showSupportSheet(context),
                 ),
                 const SizedBox(height: 12),
                 _buildMenuButton(

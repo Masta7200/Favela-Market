@@ -472,6 +472,80 @@ exports.addAddress = async (req, res, next) => {
   }
 };
 
+// @desc    Update an address (fields and/or isDefault)
+// @route   PUT /api/auth/addresses/:addressId
+// @access  Private (Client only)
+exports.updateAddress = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const address = user.addresses.id(req.params.addressId);
+
+    if (!address) {
+      return res.status(404).json({ success: false, message: 'Adresse introuvable' });
+    }
+
+    for (const field of ['label', 'fullAddress', 'city', 'quarter', 'details']) {
+      if (req.body[field] !== undefined) {
+        address[field] = typeof req.body[field] === 'string' ? req.body[field].trim() : req.body[field];
+      }
+    }
+
+    if (!address.fullAddress || !address.city) {
+      return res.status(400).json({
+        success: false,
+        message: 'L\'adresse complète et la ville sont requises'
+      });
+    }
+
+    // Only one default address; unsetting it is ignored (there must always be one)
+    if (req.body.isDefault === true) {
+      user.addresses.forEach(addr => { addr.isDefault = addr._id.equals(address._id); });
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Adresse mise à jour',
+      data: { addresses: user.addresses }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete an address
+// @route   DELETE /api/auth/addresses/:addressId
+// @access  Private (Client only)
+exports.deleteAddress = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const address = user.addresses.id(req.params.addressId);
+
+    if (!address) {
+      return res.status(404).json({ success: false, message: 'Adresse introuvable' });
+    }
+
+    const wasDefault = address.isDefault;
+    address.deleteOne();
+
+    // Keep a default address when some are left
+    if (wasDefault && user.addresses.length > 0) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Adresse supprimée',
+      data: { addresses: user.addresses }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Update FCM token for notifications
 // @route   POST /api/auth/fcm-token
 // @access  Private

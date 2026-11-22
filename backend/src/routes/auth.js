@@ -7,6 +7,8 @@ const {
   updateProfile,
   updatePassword,
   addAddress,
+  updateAddress,
+  deleteAddress,
   updateFCMToken,
   forgotPassword,
   resetPassword,
@@ -35,6 +37,8 @@ router.post('/fcm-token', protect, updateFCMToken);
 
 // Client specific routes
 router.post('/addresses', protect, authorize(USER_ROLES.CLIENT), addAddress);
+router.put('/addresses/:addressId', protect, authorize(USER_ROLES.CLIENT), updateAddress);
+router.delete('/addresses/:addressId', protect, authorize(USER_ROLES.CLIENT), deleteAddress);
 
 // Delivery specific routes
 router.put('/availability', protect, authorize(USER_ROLES.DELIVERY), setAvailability);

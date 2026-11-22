@@ -53,7 +53,7 @@ class AppConfig {
 
   // Support
   static const String supportEmail = 'support@tumaimarket.com';
-  static const String supportPhone = '+235 00 00 00 00';
+  static const String supportPhone = '+235 60 64 60 72';
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 60);

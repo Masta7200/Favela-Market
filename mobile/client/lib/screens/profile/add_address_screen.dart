@@ -6,8 +6,11 @@ import '../../providers/auth.dart';
 import '../../models/usermodel.dart';
 import '../../widgets/custom_button.dart';
 
+/// Adds a new address, or edits [address] when one is given.
 class AddAddressScreen extends StatefulWidget {
-  const AddAddressScreen({super.key});
+  final AddressModel? address;
+
+  const AddAddressScreen({super.key, this.address});
 
   @override
   State<AddAddressScreen> createState() => _AddAddressScreenState();
@@ -22,6 +25,22 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   final _detailsController = TextEditingController();
   bool _isDefault = false;
   bool _isLoading = false;
+
+  bool get _isEditing => widget.address?.id != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final address = widget.address;
+    if (address != null) {
+      _labelController.text = address.label;
+      _fullAddressController.text = address.fullAddress;
+      _cityController.text = address.city;
+      _quarterController.text = address.quarter ?? '';
+      _detailsController.text = address.details ?? '';
+      _isDefault = address.isDefault;
+    }
+  }
 
   @override
   void dispose() {
@@ -41,6 +60,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     final authProvider = context.read<AuthProvider>();
 
     final address = AddressModel(
+      id: widget.address?.id,
       label: _labelController.text.trim(),
       fullAddress: _fullAddressController.text.trim(),
       city: _cityController.text.trim(),
@@ -51,7 +71,9 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
       isDefault: _isDefault,
     );
 
-    final success = await authProvider.addAddress(address);
+    final success = _isEditing
+        ? await authProvider.updateAddress(address)
+        : await authProvider.addAddress(address);
 
     if (!mounted) return;
 
@@ -59,8 +81,10 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Adresse ajoutée avec succès'),
+        SnackBar(
+          content: Text(_isEditing
+              ? 'Adresse modifiée avec succès'
+              : 'Adresse ajoutée avec succès'),
           backgroundColor: AppTheme.successColor,
         ),
       );
@@ -79,10 +103,13 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
     final hasAddresses = authProvider.user?.addresses?.isNotEmpty ?? false;
+    // The default address stays default until another one is chosen
+    final canToggleDefault =
+        hasAddresses && !(_isEditing && widget.address!.isDefault);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ajouter une adresse'),
+        title: Text(_isEditing ? "Modifier l'adresse" : 'Ajouter une adresse'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -145,7 +172,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
               TextFormField(
                 controller: _cityController,
                 decoration: const InputDecoration(
-                  hintText: 'Ex: Douala, Yaoundé',
+                  hintText: "Ex: N'Djamena, Moundou",
                   prefixIcon: Icon(Icons.location_city),
                 ),
                 validator: (value) {
@@ -205,8 +232,8 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                           style: TextStyle(fontSize: 12),
                         )
                       : null,
-                  value: hasAddresses ? _isDefault : true,
-                  onChanged: hasAddresses
+                  value: canToggleDefault ? _isDefault : true,
+                  onChanged: canToggleDefault
                       ? (value) {
                           setState(() => _isDefault = value ?? false);
                         }

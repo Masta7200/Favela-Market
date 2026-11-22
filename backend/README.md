@@ -161,6 +161,14 @@ Content-Type: application/json
 }
 ```
 
+#### Edit / delete an address (Clients only)
+```http
+PUT    /api/auth/addresses/:addressId   { "label": "Travail", "city": "N'Djamena", ... }
+PUT    /api/auth/addresses/:addressId   { "isDefault": true }     // make it the default
+DELETE /api/auth/addresses/:addressId
+```
+Each returns the full updated `addresses` list. There is always exactly one default address: deleting it makes the first remaining one the default.
+
 #### Update FCM Token (for push notifications)
 ```http
 POST /api/auth/fcm-token
