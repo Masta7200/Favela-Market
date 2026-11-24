@@ -54,7 +54,7 @@ export default function LandingPage() {
                 <ShoppingBag className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                Toumaï Market
+                Tumaï Market
               </span>
             </div>
             <a href="#login" className="btn btn-primary">
@@ -76,7 +76,7 @@ export default function LandingPage() {
               Marketplace en Toute Simplicité
             </h1>
             <p className="text-lg text-gray-600 mb-8 sm:text-xl">
-              Tableau de bord administrateur complet pour Toumaï Market.
+              Tableau de bord administrateur complet pour Tumaï Market.
               Gérez les vendeurs, produits, commandes et bien plus encore.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
@@ -237,7 +237,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
                   <ShoppingBag className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">Toumaï Market</span>
+                <span className="text-xl font-bold">Tumaï Market</span>
               </div>
               <p className="text-gray-400">
                 Votre marketplace de confiance pour tous vos achats au Tchad.
@@ -265,7 +265,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Toumaï Market. Tous droits réservés.</p>
+            <p>&copy; {new Date().getFullYear()} Tumaï Market. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
