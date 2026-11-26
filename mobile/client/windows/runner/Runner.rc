@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "Tumai Market" "\0"
-            VALUE "FileDescription", "Tumai Market" "\0"
+            VALUE "CompanyName", "Tumaï Market" "\0"
+            VALUE "FileDescription", "Tumaï Market" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "toumai_market" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 Tumai Market. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Tumaï Market. All rights reserved." "\0"
             VALUE "OriginalFilename", "toumai_market.exe" "\0"
-            VALUE "ProductName", "Tumai Market" "\0"
+            VALUE "ProductName", "Tumaï Market" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

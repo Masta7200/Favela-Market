@@ -1,6 +1,6 @@
-# Tumai Market - Client App (Flutter)
+# Tumaï Market - Client App (Flutter)
 
-Application mobile client pour Tumai Market - Marketplace multi-vendeurs
+Application mobile client pour Tumaï Market - Marketplace multi-vendeurs
 
 ## 📱 Features (MVP)
 
@@ -293,4 +293,4 @@ Private and proprietary.
 
 ---
 
-**Tumai Market** - Votre marketplace de confiance
+**Tumaï Market** - Votre marketplace de confiance

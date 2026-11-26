@@ -1,6 +1,6 @@
-# Tumai Market - Merchant App
+# Tumaï Market - Merchant App
 
-Beautiful Flutter app for shop owners to manage their business on Tumai Market.
+Beautiful Flutter app for shop owners to manage their business on Tumaï Market.
 
 ## 🏪 Features
 
@@ -178,7 +178,7 @@ For merchant support:
 
 ---
 
-Built with ❤️ for Tumai Market Shop Owners
+Built with ❤️ for Tumaï Market Shop Owners
 EOF
 
 echo "✅ Created README.md"

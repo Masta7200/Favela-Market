@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
-        android:label="Tumai Market - Livreur"
+        android:label="Tumaï Livreur"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

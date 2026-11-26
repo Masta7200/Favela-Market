@@ -632,7 +632,7 @@ class _DeliveryPersonCard extends StatelessWidget {
     final String statusText;
     final Color statusColor;
     if (person == null) {
-      statusText = 'Un livreur sera bientôt assigné par Tumai Market.';
+      statusText = 'Un livreur sera bientôt assigné par Tumaï Market.';
       statusColor = AppTheme.textSecondaryColor;
     } else if (order.status == 'delivered' || order.status == 'completed') {
       statusText = 'Commande livrée';

@@ -23,7 +23,7 @@ class _Faq {
 const _faqs = <_Faq>[
   _Faq(
     'Pourquoi mon compte est-il en attente ?',
-    'L\'équipe Tumai Market vérifie chaque boutique avant son ouverture. Vous recevez une notification dès que votre compte est validé.',
+    'L\'équipe Tumaï Market vérifie chaque boutique avant son ouverture. Vous recevez une notification dès que votre compte est validé.',
   ),
   _Faq(
     'Pourquoi mon produit n\'est-il pas visible ?',
@@ -35,7 +35,7 @@ const _faqs = <_Faq>[
   ),
   _Faq(
     'Comment traiter une commande ?',
-    'Confirmez la commande, puis passez-la « En préparation » et « Prête ». Un livreur assigné par Tumai Market vient la récupérer.',
+    'Confirmez la commande, puis passez-la « En préparation » et « Prête ». Un livreur assigné par Tumaï Market vient la récupérer.',
   ),
 ];
 

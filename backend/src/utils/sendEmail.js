@@ -31,7 +31,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
       'api-key': BREVO_API_KEY
     },
     body: JSON.stringify({
-      sender: { name: 'Tumai Market', email: EMAIL_FROM },
+      sender: { name: 'Tumaï Market', email: EMAIL_FROM },
       to: [{ email: to }],
       subject,
       htmlContent: html,

@@ -23,7 +23,7 @@ class _Faq {
 const _faqs = <_Faq>[
   _Faq(
     'Comment recevoir des livraisons ?',
-    'Activez votre disponibilité. L\'équipe Tumai Market vous assigne des commandes et vous recevez une notification.',
+    'Activez votre disponibilité. L\'équipe Tumaï Market vous assigne des commandes et vous recevez une notification.',
   ),
   _Faq(
     'Je ne peux pas faire une livraison',

@@ -46,7 +46,7 @@ class AppConfig {
   static const String cloudinaryUploadPreset = 'jrz5sl0f';
 
   // App Info
-  static const String appName = 'Tumai Market - Livreur';
+  static const String appName = 'Tumaï Livreur';
   static const String appVersion = '1.0.0';
   static const String currency = 'FCFA';
   static const String countryCode = 'TD';

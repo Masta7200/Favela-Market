@@ -93,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Tumai Market',
+                    'Tumaï Market',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,

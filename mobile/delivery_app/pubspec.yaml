@@ -1,5 +1,5 @@
 name: tumai_market_delivery
-description: Delivery app for Tumai Market - Receive and deliver customer orders
+description: Delivery app for Tumaï Market - Receive and deliver customer orders
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -47,16 +47,20 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
 
 flutter_launcher_icons:
+  # Generated with: dart run flutter_launcher_icons
+  # app_icon.png = full icon (iOS, older Android, Windows)
+  # Android 8+: the drawing (foreground) on its own background, shaped by the phone
   android: true
   ios: true
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "lib/assets/icons/logo.png"
+  remove_alpha_ios: true
+  image_path: "lib/assets/icons/app_icon.png"
+  adaptive_icon_background: "lib/assets/icons/app_icon_background.png"
+  adaptive_icon_foreground: "lib/assets/icons/app_icon_foreground.png"
   adaptive_icon_foreground_inset: 0
   windows:
     generate: true
-    image_path: "lib/assets/icons/logo.png"
+    image_path: "lib/assets/icons/app_icon.png"
     icon_size: 48
-  image_path: "lib/assets/icons/logo.png"
 
 flutter:
   uses-material-design: true

@@ -39,7 +39,7 @@ class AppConfig {
   static const int pageSize = 20;
 
   // App Info
-  static const String appName = 'Tumai Market';
+  static const String appName = 'Tumaï Market';
   static const String appVersion = '1.0.0';
   static const String currency = 'FCFA';
   static const String phonePrefix = '+235';

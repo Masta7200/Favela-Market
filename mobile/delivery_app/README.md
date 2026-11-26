@@ -1,4 +1,4 @@
-# Tumai Market - Delivery App (Livreur)
+# Tumaï Market - Delivery App (Livreur)
 
 Flutter app for delivery persons. Built on the same structure as `merchant_app`
 (Provider + go_router + `ApiService`/`StorageService`, same theme and widgets).

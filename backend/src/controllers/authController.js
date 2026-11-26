@@ -175,7 +175,7 @@ exports.forgotPassword = async (req, res, next) => {
     try {
       await sendEmail({
         to: user.email,
-        subject: 'Tumai Market - Code de réinitialisation du mot de passe',
+        subject: 'Tumaï Market - Code de réinitialisation du mot de passe',
         html: `
           <p>Bonjour ${user.name || ''},</p>
           <p>Voici votre code de réinitialisation de mot de passe :</p>

@@ -1150,7 +1150,7 @@ class _ProfileTab extends StatelessWidget {
                 ),
                 children: const [
                   Text(
-                    'Vendez vos produits sur Tumai Market : gérez votre boutique, vos produits et vos commandes, livrées par nos livreurs.',
+                    'Vendez vos produits sur Tumaï Market : gérez votre boutique, vos produits et vos commandes, livrées par nos livreurs.',
                   ),
                 ],
               ),

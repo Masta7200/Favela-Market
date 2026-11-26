@@ -72,12 +72,10 @@ export default function Dashboard() {
           {/* Logo */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
-                <LayoutDashboard className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo-192.png" alt="Tumaï Market" className="w-10 h-10 rounded-xl shadow-sm" />
               <div>
                 <p className="font-bold text-lg">Tumaï Market</p>
-                <p className="text-xs text-gray-500">Admin Panel</p>
+                <p className="text-xs text-gray-500">Administration</p>
               </div>
             </div>
           </div>

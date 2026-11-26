@@ -192,7 +192,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
             const SizedBox(height: 8),
 
-            // Delivery person (assigned by Tumai Market)
+            // Delivery person (assigned by Tumaï Market)
             if (order.deliveryPersonName != null &&
                 order.status != 'cancelled' &&
                 order.status != 'rejected') ...[
