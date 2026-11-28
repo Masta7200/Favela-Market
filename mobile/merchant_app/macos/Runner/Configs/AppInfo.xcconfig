@@ -8,7 +8,7 @@
 PRODUCT_NAME = merchant_app
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.merchantApp
+PRODUCT_BUNDLE_IDENTIFIER = com.tumaimarket.vendeur
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 Tumaï Market. All rights reserved.

@@ -173,8 +173,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Email Field (Optional)
-                _buildLabel('Email (optionnel)'),
+                // Email is required by the backend (used for password reset)
+                _buildLabel('Email'),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -183,10 +183,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: Icon(Icons.email_rounded),
                   ),
                   validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Email invalide';
-                      }
+                    if (value == null || value.trim().isEmpty) {
+                      return 'L\'email est requis (pour récupérer votre mot de passe)';
+                    }
+                    if (!value.contains('@') || !value.contains('.')) {
+                      return 'Email invalide';
                     }
                     return null;
                   },

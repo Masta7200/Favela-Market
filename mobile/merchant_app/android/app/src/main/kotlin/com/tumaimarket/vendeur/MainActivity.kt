@@ -1,4 +1,4 @@
-﻿package com.example.merchant
+﻿package com.tumaimarket.vendeur
 
 import io.flutter.embedding.android.FlutterActivity
 

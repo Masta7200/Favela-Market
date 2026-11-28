@@ -1,4 +1,4 @@
-package com.example.client_app
+package com.tumaimarket.client
 
 import io.flutter.embedding.android.FlutterActivity
 
